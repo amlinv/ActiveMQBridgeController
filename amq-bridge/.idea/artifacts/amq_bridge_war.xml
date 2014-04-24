@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="war" name="amq-bridge:war">
+    <output-path>$PROJECT_DIR$/target</output-path>
+    <root id="archive" name="amq-bridge-1.0.0-SNAPSHOT.war">
+      <element id="artifact" artifact-name="amq-bridge:war exploded" />
+    </root>
+  </artifact>
+</component>

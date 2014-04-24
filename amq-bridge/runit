@@ -1,0 +1,10 @@
+#!/bin/sh
+
+ROOT="$(pwd)/tomcat"
+
+CATALINA_HOME=/software/apache-tomcat-7.0.53
+CATALINA_BASE="$ROOT"
+
+mkdir -p "$CATALINA_BASE"
+
+exec ${CATALINA_HOME}/bin/catalina.sh start
