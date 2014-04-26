@@ -8,7 +8,7 @@ amqBridgeApp.controller('amqBridgeCtrl', function($scope, $http) {
     $scope.connection_state = "initializing";
 
     $http.get(
-        'http://localhost:8080/bridges', { "headers" : { "Accept" : "application/json" } }
+        'http://localhost:8080/api/bridges', { "headers" : { "Accept" : "application/json" } }
     ).then (
         function(response) {
             $scope.bridges = response.data;
@@ -45,7 +45,7 @@ amqBridgeApp.controller('amqBridgeCtrl', function($scope, $http) {
 
     $scope.startBridge = function (id) {
         $scope.note = "requesting start of bridge " + id;
-        var url = 'http://localhost:8080/bridges/' + id + '/start';
+        var url = 'http://localhost:8080/api/bridges/' + id + '/start';
 
         $http.get(
             url, { "headers" : { "Accept" : "application/json" } }
@@ -63,7 +63,7 @@ amqBridgeApp.controller('amqBridgeCtrl', function($scope, $http) {
 
     $scope.stopBridge = function (id) {
         $scope.note = "requesting stop of bridge " + id;
-        var url = 'http://localhost:8080/bridges/' + id + '/stop';
+        var url = 'http://localhost:8080/api/bridges/' + id + '/stop';
 
         $http.get(
             url, { "headers" : { "Accept" : "application/json" } }
@@ -91,6 +91,7 @@ amqBridgeApp.controller('amqBridgeCtrl', function($scope, $http) {
     source.onmessage = function (event) {
         $scope.$apply(function() {
             var msg = JSON.parse(event.data);
+
             if ( msg.action == "add" ) {
                 $scope.onAddBridge(msg.data);
             } else if ( msg.action == "remove" ) {
