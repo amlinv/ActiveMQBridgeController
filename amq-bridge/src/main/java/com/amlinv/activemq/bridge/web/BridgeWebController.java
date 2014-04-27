@@ -1,6 +1,8 @@
 package com.amlinv.activemq.bridge.web;
 
 import com.amlinv.activemq.bridge.ctlr.AmqBridgeController;
+import com.amlinv.activemq.bridge.ctlr.events.AmqBridgeEvent;
+import com.amlinv.activemq.bridge.ctlr.events.AmqBridgeListener;
 import com.amlinv.activemq.bridge.model.AmqBridgeSpec;
 
 import javax.ws.rs.*;
@@ -11,7 +13,6 @@ import java.util.*;
 import com.amlinv.activemq.bridge.model.impl.AmqBridgeSpecImpl;
 import org.codehaus.jackson.io.JsonStringEncoder;
 import org.codehaus.jackson.map.ObjectMapper;
-import org.glassfish.jersey.media.sse.EventOutput;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,11 +26,21 @@ public class BridgeWebController {
     private static final Logger LOG = LoggerFactory.getLogger(BridgeWebController.class);
 
     private final AmqBridgeController       engine;
-    private List<EventOutput>               eventListeners = new ArrayList<EventOutput>();
-    private long                            eventIdIter = 0;
 
     BridgeWebController() {
         this.engine = new AmqBridgeController();
+        this.engine.addListener(new AmqBridgeListener() {
+            @Override
+            public void onEvent(AmqBridgeEvent bridgeEvent) {
+                fireEvent("bridgeEvent", objectToJson(bridgeEvent, "null"));
+            }
+        });
+
+        try {
+            this.engine.start();
+        } catch (Exception exc) {
+            LOG.error("failed to start bridge controller", exc);
+        }
     }
 
     @GET
@@ -40,11 +51,11 @@ public class BridgeWebController {
         return  new LinkedList<AmqBridgeSpec>(this.engine.getBridgeSpecs().values());
     }
 
-    @POST
+    @PUT
     @Path("/{id}")
     @Consumes("application/json")
     @Produces("application/json")
-    public void addBridge (@PathParam("id") String id, AmqBridgeSpecImpl bridgeInfo) throws Exception {
+    public AmqBridgeSpec    addBridge (@PathParam("id") String id, AmqBridgeSpecImpl bridgeInfo) throws Exception {
         LOG.debug("addBridge() ID={}", id);
 
         //
@@ -53,9 +64,24 @@ public class BridgeWebController {
         bridgeInfo.setId(id);
         this.engine.addBridge(bridgeInfo);
 
-        fireEvent("add", bridgeToJson(bridgeInfo, "null"));
+        fireEvent("add", objectToJson(bridgeInfo, "null"));
+
+        return  bridgeInfo;
     }
 
+    @POST
+    @Path("/{id}")
+    @Consumes("application/json")
+    @Produces("application/json")
+    public AmqBridgeSpec    updateBridge (@PathParam("id") String id, AmqBridgeSpecImpl bridgeInfo) throws Exception {
+        LOG.debug("updateBridge() ID={}", id);
+
+        this.engine.updateBridge(id, bridgeInfo);
+
+        fireEvent("update", objectToJson(bridgeInfo, "null"));
+
+        return  bridgeInfo;
+    }
 
     @GET
     @Path("/{id}")
@@ -139,11 +165,11 @@ public class BridgeWebController {
         AmqBridgeWebsocket.fireBridgeEvent(action, json);
     }
 
-    private String bridgeToJson (AmqBridgeSpec bridge, String fallback) {
+    private String objectToJson (Object obj, String fallback) {
         ObjectMapper mapper = new ObjectMapper();
         ByteArrayOutputStream capture = new ByteArrayOutputStream();
         try {
-            mapper.writeValue(capture, bridge);
+            mapper.writeValue(capture, obj);
             return  capture.toString();
         } catch (IOException exc) {
             LOG.warn("failed to convert bridge to json", exc);

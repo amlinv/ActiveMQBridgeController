@@ -2,31 +2,137 @@
 
 /* Controllers */
 
-var amqBridgeApp = angular.module('amqBridgeApp', ['ngAnimate']);
+var amqBridgeApp = angular.module('amqBridgeApp', ['ngAnimate', 'custom-filters']);
 
 amqBridgeApp.controller('amqBridgeCtrl', function($scope, $http) {
     $scope.connection_state = "initializing";
+    $scope.log = { "messages": "" };
 
-    $http.get(
-        'http://localhost:8080/api/bridges', { "headers" : { "Accept" : "application/json" } }
-    ).then (
-        function(response) {
-            $scope.bridges = response.data;
-        }
-        ,
-        function(err) {
-            /* Haven't found any useful error details in the argument(s) */
-            $scope.note = "get bridge-list error";
-        }
-    );
+    $scope.getBridgeList = function() {
+        $http.get(
+            'api/bridges', { "headers" : { "Accept" : "application/json" } }
+        ).then (
+            function(response) {
+                $scope.updateBridgeList(response.data);
+            }
+            ,
+            function(err) {
+                /* Haven't found any useful error details in the argument(s) */
+                $scope.note = "get bridge-list error";
+            }
+        );
+    }
+
+    $scope.sendCreateBridge = function(newBridge) {
+        $scope.log.messages = $scope.log.messages.concat(JSON.stringify(newBridge));
+        $http.put(
+            'api/bridges/' + newBridge.id,
+            JSON.stringify(newBridge),
+            { "headers" : { "Accept" : "application/json", "Content-Type" : "application/json" } }
+        ).then (
+            function(response) {
+                $scope.note = "bridge \"" + newBridge.id + "\" added";
+            }
+            ,
+            function(err) {
+                /* Haven't found any useful error details in the argument(s) */
+                $scope.note = "create bridge \"" + newBridge.id + "\" error";
+            }
+        );
+    }
+
+    $scope.sendUpdateBridge = function(upd_bridge) {
+        $scope.log.messages = $scope.log.messages.concat(JSON.stringify(upd_bridge) + "\n");
+        $http.post(
+            'api/bridges/' + upd_bridge.id,
+            JSON.stringify(upd_bridge),
+            { "headers" : { "Accept" : "application/json", "Content-Type" : "application/json" } }
+        ).then (
+            function(response) {
+                $scope.note = "bridge \"" + upd_bridge.id + "\" updated";
+            }
+            ,
+            function(err) {
+                /* Haven't found any useful error details in the argument(s) */
+                $scope.note = "update bridge \"" + upd_bridge.id + "\" error";
+            }
+        );
+    }
+
+    $scope.sendDeleteBridge = function(id) {
+        $http.delete(
+            'api/bridges/' + id,
+            { "headers" : { "Accept" : "application/json" } }
+        ).then (
+            function(response) {
+                /* TBD: remove from the table here */
+                $scope.note = "bridge \"" + upd_bridge.id + "\" deleted";
+            }
+            ,
+            function(err) {
+                /* Haven't found any useful error details in the argument(s) */
+                $scope.note = "delete bridge \"" + upd_bridge.id + "\" error";
+            }
+        );
+    }
+
+    /**
+     * Get the bridge list now.
+     */
+    $scope.getBridgeList();
 
     $scope.connection_state = "connecting";
-    $scope.onAddBridge = function (upd) {
-        if ( upd instanceof Array ) {
-            $scope.bridges = $scope.bridges.concat(upd);
-        } else {
-            $scope.bridges.push(upd);
+    $scope.onProcessOneBridge = function (bridge) {
+        var bridge_copy = angular.copy(bridge);
+
+        if ( ! ( 'newBridge' in bridge_copy ) ) {
+            bridge_copy.newBridge = false;
         }
+
+        var index = $scope.findBridgeIndexWithId(bridge.id);
+        if ( index == -1 ) {
+            //
+            // Unknown ID - add a new one.
+            //
+            $scope.bridges.push(bridge_copy);
+            $scope.bridgesSnapshot.push(angular.copy(bridge_copy));
+        } else {
+            //
+            // Known ID - update the existing one.
+            //
+            $scope.bridges[index] = bridge_copy;
+            $scope.bridgesSnapshot[index] = angular.copy(bridge_copy);
+        }
+    }
+
+    $scope.onAddBridge = function (upd) {
+        var copy = angular.copy(upd);
+
+        if ( copy instanceof Array ) {
+            var cur = 0;
+            while ( cur < copy.length ) {
+                $scope.onProcessOneBridge(copy[cur]);
+                cur++;
+            }
+        } else {
+            $scope.onProcessOneBridge(copy);
+        }
+    }
+
+    /* TBD: more efficient solution */
+    $scope.findBridgeIndexWithId = function (id) {
+        /* TBD: use the array; need to use the "original" id */
+        /* $scope.bridgeIndex[$scope.bridges[cur].id] = cur; */
+        var cur = 0;
+
+        while ( cur < $scope.bridges.length ) {
+            if ( $scope.bridges[cur].id == id ) {
+                return  cur;
+            }
+            cur++;
+        }
+
+        return  -1;
     }
 
     $scope.onRemoveBridge = function (data) {
@@ -34,6 +140,7 @@ amqBridgeApp.controller('amqBridgeCtrl', function($scope, $http) {
         while ( cur >= 0 ) {
             if ( $scope.bridges[cur].id == data.id ) {
                 $scope.bridges.splice(cur, 1);
+                $scope.bridgesSnapshot.splice(cur, 1);
             }
             cur--;
         }
@@ -43,9 +150,28 @@ amqBridgeApp.controller('amqBridgeCtrl', function($scope, $http) {
         // TBD
     }
 
+    $scope.onBridgeEvent = function (data) {
+        /* TBD: alert("BRIDGE EVENT: " + JSON.stringify(data)); */
+        if ( data.type == "BRIDGE_STOPPED" ) {
+            var index = $scope.findBridgeIndexWithId(data.data);
+            if ( index != -1 ) {
+                $scope.bridges[index].running = false;
+            } else {
+                $scope.note = "received stopped event for unknown bridge id '" + data.data + "'";
+            }
+        } else if ( data.type == "BRIDGE_STARTED" ) {
+            var index = $scope.findBridgeIndexWithId(data.data);
+            if ( index != -1 ) {
+                $scope.bridges[index].running = true;
+            } else {
+                $scope.note = "received started event for unknown bridge id '" + data.data + "'";
+            }
+        }
+    }
+
     $scope.startBridge = function (id) {
         $scope.note = "requesting start of bridge " + id;
-        var url = 'http://localhost:8080/api/bridges/' + id + '/start';
+        var url = 'api/bridges/' + id + '/start';
 
         $http.get(
             url, { "headers" : { "Accept" : "application/json" } }
@@ -63,7 +189,7 @@ amqBridgeApp.controller('amqBridgeCtrl', function($scope, $http) {
 
     $scope.stopBridge = function (id) {
         $scope.note = "requesting stop of bridge " + id;
-        var url = 'http://localhost:8080/api/bridges/' + id + '/stop';
+        var url = 'api/bridges/' + id + '/stop';
 
         $http.get(
             url, { "headers" : { "Accept" : "application/json" } }
@@ -98,6 +224,8 @@ amqBridgeApp.controller('amqBridgeCtrl', function($scope, $http) {
                 $scope.onRemoveBridge(msg.data);
             } else if ( msg.action == "update" ) {
                 $scope.onUpdateBridge(msg.data);
+            } else if ( msg.action == "bridgeEvent" ) {
+                $scope.onBridgeEvent(msg.data);
             }
 
             if ( $scope.debug_log ) {
@@ -122,4 +250,95 @@ amqBridgeApp.controller('amqBridgeCtrl', function($scope, $http) {
         );
     }
 
+    $scope.matchBridge = function(actual, expected) {
+        if ( actual ) {
+            return ( actual['srcUrl'] == expected );
+        }
+
+        return  false;
+    }
+
+    $scope.updateBridgeList = function(newList) {
+        $scope.bridges = newList;
+        $scope.bridgesSnapshot = angular.copy($scope.bridges);
+
+        $scope.bridgeIndex = {};
+
+        var cur = 0;
+        while ( cur < $scope.bridges.length ) {
+            $scope.bridgeIndex[$scope.bridges[cur].id] = cur;
+            cur++;
+        }
+    }
+
+    $scope.saveBridgeEdits = function(id) {
+        var index = $scope.findBridgeIndexWithId(id);
+        if ( index != -1 ) {
+            var bridge = $scope.bridges[index];
+            if ( ( typeof(bridge.queueList) == "string" ) || ( bridge.queueList instanceof String ) ) {
+                bridge.queueList = bridge.queueList.split(",");
+            }
+
+            if ( ( 'newBridge' in bridge ) && ( bridge.newBridge ) ) {
+                this.sendCreateBridge(bridge);
+            } else {
+                this.sendUpdateBridge(bridge);
+            }
+
+            $scope.bridgesSnapshot[index] = angular.copy($scope.bridges[index]);
+        }
+    }
+
+    $scope.undoBridgeEdits = function(id) {
+        var index = $scope.findBridgeIndexWithId(id);
+        if ( index != -1 ) {
+            if ( ( 'newBridge' in $scope.bridges[index] ) && ( $scope.bridges[index].newBridge ) ) {
+                //
+                // Cancel on adding a new bridge; remove it.
+                //
+                $scope.bridges.splice(index, 1);
+                $scope.bridgesSnapshot.splice(index, 1);
+            } else {
+                //
+                // Cancel on editting an existing bridge; revert.
+                //
+                $scope.bridges[index] = angular.copy($scope.bridgesSnapshot[index]);
+            }
+        }
+    }
+
+    $scope.deleteBridge = function(id) {
+        var index = $scope.findBridgeIndexWithId(id);
+        if ( index != -1 ) {
+            $scope.sendDeleteBridge(id);
+            $scope.bridges.splice(index, 1);
+            $scope.bridgesSnapshot.splice(index, 1);
+        }
+    }
+
+    $scope.addNewBridge = function() {
+        var randNum = Math.floor(Math.random() * 1000 ) % 1000;
+        var newId   = "bridge-" + randNum;
+        var bridge  =
+            {
+                "id": newId,
+                "srcUrl": "failover://(tcp://localhost:61616)",
+                "destUrl": "failover://(tcp://localhost:61626",
+                "queueList": ["QUEUE-A", "QUEUE-B"],
+                "running": false,
+                "editMode": true,
+                "newBridge": true
+            };
+
+        this.onAddBridge(bridge);
+    }
+
+    $scope.startEdit = function(id) {
+        var index = $scope.findBridgeIndexWithId(id);
+        if ( index != -1 ) {
+            $scope.bridges[index].editMode = true;
+        }
+    }
+
 });
+

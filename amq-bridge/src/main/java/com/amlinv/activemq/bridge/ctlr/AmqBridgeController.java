@@ -1,18 +1,17 @@
 package com.amlinv.activemq.bridge.ctlr;
 
+import static com.amlinv.activemq.bridge.ctlr.events.AmqBridgeEventSource.*;
+
+import com.amlinv.activemq.bridge.ctlr.events.*;
 import com.amlinv.activemq.bridge.engine.AmqBridge;
 import com.amlinv.activemq.bridge.engine.AmqBridgeConfigurationException;
 import com.amlinv.activemq.bridge.model.AmqBridgeSpec;
-import com.amlinv.activemq.bridge.model.AmqBridgeListener;
 import com.amlinv.util.service.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jms.JMSException;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Controller for an ActiveMQ Bridge.
@@ -26,6 +25,7 @@ public class AmqBridgeController implements Service {
     private Map<String, AmqBridge>              activeBridges = new HashMap<String, AmqBridge>();
     private final List<AmqBridgeListener>       listeners = new LinkedList<AmqBridgeListener>();
     private final ServiceController             serviceCtlr = new ServiceController(this);
+    private AmqBridgeEventSendExecutor          eventSendExec;
 
     public Map<String, AmqBridgeSpec> getBridgeSpecs() {
         return new HashMap<String, AmqBridgeSpec>(this.bridgeSpecs);
@@ -42,6 +42,34 @@ public class AmqBridgeController implements Service {
         }
     }
 
+    public void updateBridge (String id, AmqBridgeSpec spec)
+    throws BridgeAlreadyExistsException, AmqBridgeConfigurationException, JMSException, BridgeNotDefinedException, BridgeActiveException {
+        synchronized ( this.bridgeSpecs ) {
+            //
+            // Make sure the original spec exists and is not active, and make sure the new ID is not already used,
+            //  unless this is an update to the same bridge.
+            //
+            //  The active check is to ensure a bridge's state does not become confused; this may be relaxes in the
+            //  future (e.g. changing the ID or adding new destinations may be allowed).
+            //
+            if ( ! this.bridgeSpecs.containsKey(id) ) {
+                throw new BridgeNotDefinedException(id);
+            }
+            if ( this.activeBridges.containsKey(id) ) {
+                throw new BridgeActiveException(id);
+            }
+            if ( ! ( id.equals(spec.getId()) ) ) {
+                if (this.bridgeSpecs.containsKey(spec.getId())) {
+                    throw new BridgeAlreadyExistsException(spec.getId());
+                }
+            }
+
+            // Replace the spec with the original ID with the spec with the new ID.
+            this.bridgeSpecs.remove(id);
+            this.bridgeSpecs.put(spec.getId(), spec);
+        }
+    }
+
     /**
      * Delete the bridge with the given ID, stopping it if currently active.
      *
@@ -52,14 +80,20 @@ public class AmqBridgeController implements Service {
      * @throws AmqBridgeConfigurationException
      */
     public void deleteBridge (String id)
-    throws BridgeNotDefinedException, BridgeNotActiveException, JMSException, AmqBridgeConfigurationException
+    throws BridgeNotDefinedException, BridgeNotActiveException, JMSException, AmqBridgeConfigurationException,
+           BridgeControllerNotActiveException
     {
         //
-        // Stop the bridge first, if it is active.
+        // Stop the bridge first, if it is active.  Use the unchecked version of the stop method as this operation must
+        //  be safe whether the controller is active or not; while it is unlikely to need to stop the bridge while the
+        //  service is inactive, it could happen due to race conditions (e.g. stop() is active while deleteBridge() and
+        //  the stop handling race to stop the bridge).
+        //
+        // TBD: what happens if the stop fails because it is already stopped?
         //
         synchronized ( this.activeBridges ) {
             if ( this.activeBridges.containsKey(id) ) {
-                this.stopBridge(id);
+                this.stopBridgeUnchecked(id);
             }
         }
 
@@ -79,19 +113,20 @@ public class AmqBridgeController implements Service {
         }
     }
 
-    public void start () throws Exception {
-        this.serviceCtlr.start();
-    }
-
-    public void stop () throws Exception {
-        this.serviceCtlr.stop();
+    public boolean  isBridgeIdle (String id) {
+        synchronized ( this.bridgeSpecs ) {
+            return  this.activeBridges.containsKey(id);
+        }
     }
 
     public void startBridge (String id)
-    throws AmqBridgeConfigurationException, JMSException, BridgeAlreadyActiveException, BridgeNotDefinedException
+    throws AmqBridgeConfigurationException, JMSException, BridgeAlreadyActiveException, BridgeNotDefinedException,
+           BridgeControllerNotActiveException
     {
         AmqBridgeSpec   spec;
         AmqBridge       bridge;
+
+        this.checkActive();
 
         LOG.info("starting bridge {}", id);
 
@@ -124,35 +159,26 @@ public class AmqBridgeController implements Service {
             }
         }
 
+        fireBridgeStartedEvent(id, new AmqBridgeEventCause("start requested", USER));
+
         LOG.info("bridge {} has been started", spec.getId());
     }
 
     public void stopBridge (String id)
-    throws BridgeNotActiveException, AmqBridgeConfigurationException, JMSException, BridgeNotDefinedException
+    throws BridgeNotActiveException, AmqBridgeConfigurationException, JMSException, BridgeNotDefinedException,
+           BridgeControllerNotActiveException
     {
-        AmqBridgeSpec   spec;
-        AmqBridge       bridge;
+        this.checkActive();
+        this.stopBridgeUnchecked(id);
+    }
 
-        LOG.info("stopping bridge {}", id);
 
-        synchronized ( this.bridgeSpecs ) {
-            spec = this.bridgeSpecs.get(id);
-            if (spec == null) {
-                throw new BridgeNotDefinedException(id);
-            }
-        }
+    public void start () throws Exception {
+        this.serviceCtlr.start();
+    }
 
-        synchronized ( this.activeBridges ) {
-            if ( ! this.activeBridges.containsKey(id) ) {
-                throw new BridgeNotActiveException(id);
-            }
-
-            bridge = this.activeBridges.remove(id);
-        }
-
-        bridge.stop();
-
-        LOG.info("bridge {} has been stopped", spec.getId());
+    public void stop () throws Exception {
+        this.serviceCtlr.stop();
     }
 
     /**
@@ -172,6 +198,8 @@ public class AmqBridgeController implements Service {
         for ( Map.Entry<String, AmqBridge> oneEnt : bridgesToStop.entrySet() ) {
             stopOneBridge(oneEnt.getKey(), oneEnt.getValue());
         }
+
+        this.eventSendExec.shutdown();
     }
 
     /**
@@ -182,6 +210,7 @@ public class AmqBridgeController implements Service {
      */
     @Override
     public void startService () throws Exception {
+        this.eventSendExec = new AmqBridgeEventSendExecutor();
     }
 
     @Override
@@ -210,6 +239,41 @@ public class AmqBridgeController implements Service {
         return this.serviceCtlr.isStarted();
     }
 
+    protected void  checkActive () throws BridgeControllerNotActiveException {
+        if ((!this.serviceCtlr.isStarted()) || (this.serviceCtlr.isStopping())) {
+            throw new BridgeControllerNotActiveException();
+        }
+    }
+
+    protected void stopBridgeUnchecked (String id)
+    throws BridgeNotActiveException, AmqBridgeConfigurationException, JMSException, BridgeNotDefinedException,
+           BridgeControllerNotActiveException
+    {
+        AmqBridgeSpec   spec;
+        AmqBridge       bridge;
+
+        LOG.info("stopping bridge {}", id);
+
+        synchronized ( this.bridgeSpecs ) {
+            spec = this.bridgeSpecs.get(id);
+            if (spec == null) {
+                throw new BridgeNotDefinedException(id);
+            }
+        }
+
+        synchronized ( this.activeBridges ) {
+            if ( ! this.activeBridges.containsKey(id) ) {
+                throw new BridgeNotActiveException(id);
+            }
+
+            bridge = this.activeBridges.remove(id);
+        }
+
+        this.stopOneBridge(id, bridge);
+
+        LOG.info("bridge {} has been stopped", id);
+    }
+
     /**
      * Stop the given bridge.
      *
@@ -219,8 +283,40 @@ public class AmqBridgeController implements Service {
         LOG.info("stopping bridge {}", id);
         try {
             bridge.stop();
+            fireBridgeStoppedEvent(id, new AmqBridgeEventCause("stop requested", USER));
         } catch ( Exception jmsExc ) {
             LOG.info("error on stopping bridge {}", jmsExc);
         }
     }
+
+    protected void  fireBridgeStoppedEvent (String id, AmqBridgeEventCause cause) {
+        AmqBridgeEvent  stopEvent = new AmqBridgeEvent();
+
+        stopEvent.setType(AmqBridgeEventType.BRIDGE_STOPPED);
+        stopEvent.setCause(cause);
+        stopEvent.setData(id);
+
+        List<AmqBridgeListener> curListeners;
+        synchronized ( this.listeners ) {
+            curListeners = new ArrayList<AmqBridgeListener>(this.listeners);
+        }
+
+        eventSendExec.queueEventSend(stopEvent, curListeners);
+    }
+
+    protected void  fireBridgeStartedEvent (String id, AmqBridgeEventCause cause) {
+        AmqBridgeEvent  startEvent = new AmqBridgeEvent();
+
+        startEvent.setType(AmqBridgeEventType.BRIDGE_STARTED);
+        startEvent.setCause(cause);
+        startEvent.setData(id);
+
+        List<AmqBridgeListener> curListeners;
+        synchronized ( this.listeners ) {
+            curListeners = new ArrayList<AmqBridgeListener>(this.listeners);
+        }
+
+        eventSendExec.queueEventSend(startEvent, curListeners);
+    }
+
 }

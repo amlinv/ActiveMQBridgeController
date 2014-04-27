@@ -6,6 +6,7 @@ package com.amlinv.activemq.bridge.web;
  * Created by art on 4/22/14.
  */
 
+import com.amlinv.util.thread.DaemonThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,16 +30,7 @@ public class AmqBridgeWebsocket {
     private static ThreadPoolExecutor   executor =
                                         new ThreadPoolExecutor(
                                                 1, 3, 5, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(),
-                                                    new ThreadFactory() {
-                                                        private int num = 1;
-                                                        public Thread newThread(Runnable r) {
-                                                            Thread result = new Thread(r);
-                                                            result.setDaemon(true);
-                                                            result.setName("Websocket Dispatcher Thread-" + num++);
-
-                                                            return  result;
-                                                        }
-                                                    });
+                                                new DaemonThreadFactory("Websocket-Dispatcher-Thread-"));
 
     @OnClose
     public void onClose(Session sess, CloseReason reason) {

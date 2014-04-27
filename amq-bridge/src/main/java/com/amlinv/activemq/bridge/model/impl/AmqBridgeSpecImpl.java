@@ -1,9 +1,12 @@
 package com.amlinv.activemq.bridge.model.impl;
 
 import com.amlinv.activemq.bridge.model.AmqBridgeSpec;
-import com.amlinv.activemq.bridge.model.AmqBridgeListener;
+import com.amlinv.activemq.bridge.ctlr.events.AmqBridgeListener;
+import org.codehaus.jackson.annotate.JsonAnySetter;
 
 import javax.xml.bind.annotation.XmlRootElement;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -51,6 +54,11 @@ public class AmqBridgeSpecImpl implements AmqBridgeSpec {
     @Override
     public void setQueueList (List<String> list) {
         this.queueList = list;
+    }
+
+    @JsonAnySetter
+    public void setAnyMisc (String name, Object value) {
+        // Ignore extra fields.
     }
 
     public void addListener (AmqBridgeListener newListener) {

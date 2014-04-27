@@ -84,6 +84,9 @@ public class AmqBridge {
             throw new AmqBridgeConfigurationException("bridge destination URL must not be null");
         }
 
+        //
+        // TBD: make this asynchronous - either here, or above here - as the connection start() can block.
+        //
         this.srcConn = null;
         this.destConn = null;
         boolean complete = false;
@@ -110,7 +113,6 @@ public class AmqBridge {
 
     public void stop () throws JMSException, AmqBridgeConfigurationException {
         // TBD: use ServiceController
-        // TBD: shutdown the connections
         synchronized ( this ) {
             if (stoppingInd) {
                 throw new IllegalStateException("bridge is already in the process of shutting down");
@@ -139,6 +141,11 @@ public class AmqBridge {
             return;
 
         try {
+            //
+            // If you find a stack trace for an exception coming from here even though the catch block was not executed,
+            //  that's ActiveMQ internal magic which remembers the close() here and reports it as the cause of an
+            //  exception somewhere else.  Ignore this part of the stack trace.
+            //
             conn.close();
         } catch ( Throwable thrown ) {
             LOG.warn("error on closing ActiveMQ connection {}", msg, thrown);
