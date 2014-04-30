@@ -24,7 +24,7 @@ amqBridgeApp.controller('amqBridgeCtrl', function($scope, $http) {
     }
 
     $scope.sendCreateBridge = function(newBridge) {
-        debug("Send create-bridge to server: " + JSON.stringify(newBridge));
+        $scope.debug("Send create-bridge to server: " + JSON.stringify(newBridge));
         $http.put(
             'api/bridges/' + newBridge.id,
             JSON.stringify(newBridge),
@@ -42,7 +42,7 @@ amqBridgeApp.controller('amqBridgeCtrl', function($scope, $http) {
     }
 
     $scope.sendUpdateBridge = function(upd_bridge) {
-        debug(JSON.stringify(upd_bridge));
+        $scope.debug(JSON.stringify(upd_bridge));
         $http.post(
             'api/bridges/' + upd_bridge.id,
             JSON.stringify(upd_bridge),
@@ -151,7 +151,7 @@ amqBridgeApp.controller('amqBridgeCtrl', function($scope, $http) {
     }
 
     $scope.onBridgeEvent = function (data) {
-        debug("BRIDGE EVENT: " + JSON.stringify(data));
+        $scope.debug("BRIDGE EVENT: " + JSON.stringify(data));
 
         if ( data.type == "BRIDGE_STOPPED" ) {
             var index = $scope.findBridgeIndexWithId(data.data);
@@ -171,7 +171,7 @@ amqBridgeApp.controller('amqBridgeCtrl', function($scope, $http) {
     }
 
     $scope.onBridgeStats = function (data) {
-        debug("BRIDGE STATS: " + JSON.stringify(data));
+        $scope.debug("BRIDGE STATS: " + JSON.stringify(data));
         if ( "bridgeId" in data ) {
             var index = $scope.findBridgeIndexWithId(data.bridgeId);
             if ( index != -1 ) {
@@ -327,7 +327,7 @@ amqBridgeApp.controller('amqBridgeCtrl', function($scope, $http) {
         if ( index != -1 ) {
             $scope.sendDeleteBridge(id);
         } else {
-            debug("failed to locate bridge \"" + id + "\" to delete");
+            $scope.debug("failed to locate bridge \"" + id + "\" to delete");
         }
     }
 
@@ -359,7 +359,7 @@ amqBridgeApp.controller('amqBridgeCtrl', function($scope, $http) {
      * DEBUGGING
      */
     $scope.debug = function(msg) {
-        $scope.log.messages = $scope.log.messages.concat(data) + "\n";
+        $scope.log.messages = $scope.log.messages.concat(msg) + "\n";
     }
 });
 
