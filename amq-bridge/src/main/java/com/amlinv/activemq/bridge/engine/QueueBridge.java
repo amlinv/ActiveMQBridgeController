@@ -1,5 +1,6 @@
 package com.amlinv.activemq.bridge.engine;
 
+import com.amlinv.util.event.EventListenerAsyncUtil;
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQMessageAudit;
 import org.apache.activemq.command.ActiveMQMessage;
@@ -38,6 +39,11 @@ public class QueueBridge {
     private long                numErrors;
     private String              queueName;
 
+    /**
+     * TBD: giving every bridge it's own ThreadPoolExecutor is overkill.
+     */
+    private EventListenerAsyncUtil<DestinationBridgeEvent, DestinationBridgeListener>   eventSendUtil;
+
     private boolean             started = false;
     private boolean             stopped = false;
 
@@ -45,6 +51,9 @@ public class QueueBridge {
         this.srcConn   = inSrcConn;
         this.destConn  = inDestConn;
         this.queueName = qName;
+        this.eventSendUtil = new EventListenerAsyncUtil<DestinationBridgeEvent,
+                                                        DestinationBridgeListener>("queue-bridge-event-send-", 3, 5,
+                                                                                   1000, 100);
     }
 
     public long getNumMsgPassed () {
@@ -78,6 +87,8 @@ public class QueueBridge {
                     QueueBridge.this.onSrcMessage(message);
                 }
             });
+
+            eventSendUtil.queueEventSend(new DestinationBridgeEvent(DestinationBridgeEventType.DESTINATION_BRIDGE_STARTED));
             complete = true;
         } finally {
             if ( ! complete ) {
@@ -95,6 +106,7 @@ public class QueueBridge {
                 throw new IllegalStateException("attempt to stop when already stopped (or stopping)");
             }
 
+            eventSendUtil.queueEventSend(new DestinationBridgeEvent(DestinationBridgeEventType.DESTINATION_BRIDGE_STOPPED));
             this.stopped = true;
         }
 
@@ -102,8 +114,17 @@ public class QueueBridge {
         closeSessionSafely(this.destSess, "on shutdown");
     }
 
+    public void addListener (DestinationBridgeListener listener) {
+        eventSendUtil.addListener(listener);
+    }
+
+    public void removeListener (DestinationBridgeListener listener) {
+        eventSendUtil.removeListener(listener);
+    }
+
     protected void  onSrcMessage (Message msg) {
         try {
+            eventSendUtil.queueEventSend(new DestinationBridgeEvent(DestinationBridgeEventType.MESSAGE_RECEIVED));
             if ( msg instanceof ActiveMQMessage ) {
                 ActiveMQMessage amqMsg = (ActiveMQMessage) msg;
 
@@ -113,11 +134,14 @@ public class QueueBridge {
 
             msg.setLongProperty(QUEUE_BRIDGE_MSG_NUM, this.numMsgPassed);
             this.producer.send(msg);
+            eventSendUtil.queueEventSend(new DestinationBridgeEvent(DestinationBridgeEventType.MESSAGE_SENT));
 
             this.srcSess.commit();
 
             this.numMsgPassed++;
         } catch ( JMSException jmsExc ) {
+            eventSendUtil.queueEventSend(new DestinationBridgeEvent(DestinationBridgeEventType.MESSAGE_ERROR));
+
             LOG.error("failed to forward message num {}", jmsExc);
             LOG.debug("failed message = {}", msg);
 

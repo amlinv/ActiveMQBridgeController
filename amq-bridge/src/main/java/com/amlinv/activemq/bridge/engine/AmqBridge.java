@@ -2,12 +2,16 @@ package com.amlinv.activemq.bridge.engine;
 
 import com.amlinv.activemq.bridge.engine.impl.QueueBridgeFactoryDefaultImpl;
 import com.amlinv.activemq.bridge.model.AmqBridgeSpec;
+import com.amlinv.activemq.bridge.web.AmqBridgeWebsocket;
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.jms.JMSException;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -29,10 +33,12 @@ public class AmqBridge {
     private List<String>                queueList;
     private Map<String, QueueBridge>    queueBridges = new HashMap<String, QueueBridge>();
     private QueueBridgeFactory          queueBridgeFactory = new QueueBridgeFactoryDefaultImpl();
+    private AmqBridgeStatistics         stats;
 
     public void setAmqBridgeSpec (AmqBridgeSpec inSpec) {
-        this.spec = inSpec;
+        this.spec      = inSpec;
         this.queueList = this.spec.getQueueList();
+        this.stats     = new AmqBridgeStatistics(this.spec.getId());
     }
 
     /**
@@ -161,6 +167,33 @@ public class AmqBridge {
     protected void  startQueueBridge (String queueName) throws JMSException {
         QueueBridge newBridge = queueBridgeFactory.createBridge(this.srcConn, this.destConn, queueName);
 
+        newBridge.addListener(new DestinationBridgeListener() {
+            @Override
+            public void onEvent(DestinationBridgeEvent event) {
+                switch ( event.getType() ) {
+                    case DESTINATION_BRIDGE_STARTED:
+                        break;
+
+                    case DESTINATION_BRIDGE_STOPPED:
+                        break;
+
+                    case MESSAGE_RECEIVED:
+                        AmqBridge.this.stats.incrementMessagesReceived();
+                        AmqBridge.this.fireStatsEvent();
+                        break;
+
+                    case MESSAGE_SENT:
+                        AmqBridge.this.stats.incrementMessagesSent();
+                        AmqBridge.this.fireStatsEvent();
+                        break;
+
+                    case MESSAGE_ERROR:
+                        AmqBridge.this.stats.incrementMessageErrors();
+                        AmqBridge.this.fireStatsEvent();
+                        break;
+                }
+            }
+        });
         synchronized ( this.queueBridges ) {
             if ( this.queueBridges.containsKey(queueName) ) {
                 LOG.debug("skipping duplicate attempt to start queue bridge for queue {}", queueName);
@@ -172,4 +205,29 @@ public class AmqBridge {
 
         newBridge.start();
     }
+
+    protected void  fireStatsEvent () {
+        this.fireEvent("stats", objectToJson(this.stats, "null"));
+    }
+
+
+    // TBD999: these do NOT belong here - move back to WEB and wire the WEB package to listen to this class.
+    private void fireEvent(String action, String json) {
+        AmqBridgeWebsocket.fireBridgeEvent(action, json);
+    }
+
+    private String objectToJson (Object obj, String fallback) {
+        ObjectMapper mapper = new ObjectMapper();
+        ByteArrayOutputStream capture = new ByteArrayOutputStream();
+        try {
+            mapper.writeValue(capture, obj);
+            return  capture.toString();
+        } catch (IOException exc) {
+            LOG.warn("failed to convert bridge to json", exc);
+        }
+
+        return  fallback;
+    }
+
+
 }

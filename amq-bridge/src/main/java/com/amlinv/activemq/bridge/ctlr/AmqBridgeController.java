@@ -6,6 +6,7 @@ import com.amlinv.activemq.bridge.ctlr.events.*;
 import com.amlinv.activemq.bridge.engine.AmqBridge;
 import com.amlinv.activemq.bridge.engine.AmqBridgeConfigurationException;
 import com.amlinv.activemq.bridge.model.AmqBridgeSpec;
+import com.amlinv.util.event.EventListenerAsyncUtil;
 import com.amlinv.util.service.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,9 +24,9 @@ public class AmqBridgeController implements Service {
 
     private final Map<String, AmqBridgeSpec>    bridgeSpecs = new HashMap<String, AmqBridgeSpec>();
     private Map<String, AmqBridge>              activeBridges = new HashMap<String, AmqBridge>();
-    private final List<AmqBridgeListener>       listeners = new LinkedList<AmqBridgeListener>();
     private final ServiceController             serviceCtlr = new ServiceController(this);
-    private AmqBridgeEventSendExecutor          eventSendExec;
+    private final EventListenerAsyncUtil        eventSendUtil =
+                                                new EventListenerAsyncUtil("amq-bridge-event-sender-", 3, 5, 3000, 25);
 
     public Map<String, AmqBridgeSpec> getBridgeSpecs() {
         return new HashMap<String, AmqBridgeSpec>(this.bridgeSpecs);
@@ -199,7 +200,7 @@ public class AmqBridgeController implements Service {
             stopOneBridge(oneEnt.getKey(), oneEnt.getValue());
         }
 
-        this.eventSendExec.shutdown();
+        this.eventSendUtil.shutdown();
     }
 
     /**
@@ -210,7 +211,6 @@ public class AmqBridgeController implements Service {
      */
     @Override
     public void startService () throws Exception {
-        this.eventSendExec = new AmqBridgeEventSendExecutor();
     }
 
     @Override
@@ -224,15 +224,11 @@ public class AmqBridgeController implements Service {
     }
 
     public void addListener (AmqBridgeListener newListener) {
-        synchronized ( listeners ) {
-            this.listeners.add(newListener);
-        }
+        eventSendUtil.addListener(newListener);
     }
 
-    public void removeListener (AmqBridgeListener newListener) {
-        synchronized ( listeners ) {
-            this.listeners.remove(newListener);
-        }
+    public void removeListener (AmqBridgeListener rmListener) {
+        eventSendUtil.removeListener(rmListener);
     }
 
     public boolean isRunning() {
@@ -297,11 +293,7 @@ public class AmqBridgeController implements Service {
         stopEvent.setData(id);
 
         List<AmqBridgeListener> curListeners;
-        synchronized ( this.listeners ) {
-            curListeners = new ArrayList<AmqBridgeListener>(this.listeners);
-        }
-
-        eventSendExec.queueEventSend(stopEvent, curListeners);
+        eventSendUtil.queueEventSend(stopEvent);
     }
 
     protected void  fireBridgeStartedEvent (String id, AmqBridgeEventCause cause) {
@@ -311,12 +303,7 @@ public class AmqBridgeController implements Service {
         startEvent.setCause(cause);
         startEvent.setData(id);
 
-        List<AmqBridgeListener> curListeners;
-        synchronized ( this.listeners ) {
-            curListeners = new ArrayList<AmqBridgeListener>(this.listeners);
-        }
-
-        eventSendExec.queueEventSend(startEvent, curListeners);
+        this.eventSendUtil.queueEventSend(startEvent);
     }
 
 }

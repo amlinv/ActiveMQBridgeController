@@ -24,7 +24,7 @@ amqBridgeApp.controller('amqBridgeCtrl', function($scope, $http) {
     }
 
     $scope.sendCreateBridge = function(newBridge) {
-        $scope.log.messages = $scope.log.messages.concat(JSON.stringify(newBridge));
+        debug("Send create-bridge to server: " + JSON.stringify(newBridge));
         $http.put(
             'api/bridges/' + newBridge.id,
             JSON.stringify(newBridge),
@@ -42,7 +42,7 @@ amqBridgeApp.controller('amqBridgeCtrl', function($scope, $http) {
     }
 
     $scope.sendUpdateBridge = function(upd_bridge) {
-        $scope.log.messages = $scope.log.messages.concat(JSON.stringify(upd_bridge) + "\n");
+        debug(JSON.stringify(upd_bridge));
         $http.post(
             'api/bridges/' + upd_bridge.id,
             JSON.stringify(upd_bridge),
@@ -65,7 +65,7 @@ amqBridgeApp.controller('amqBridgeCtrl', function($scope, $http) {
             { "headers" : { "Accept" : "application/json" } }
         ).then (
             function(response) {
-                /* TBD: remove from the table here */
+                /* No need to remove from the table here; a websocket event will notify the UI when it's removed. */
                 $scope.note = "bridge \"" + upd_bridge.id + "\" deleted";
             }
             ,
@@ -151,7 +151,8 @@ amqBridgeApp.controller('amqBridgeCtrl', function($scope, $http) {
     }
 
     $scope.onBridgeEvent = function (data) {
-        /* TBD: alert("BRIDGE EVENT: " + JSON.stringify(data)); */
+        debug("BRIDGE EVENT: " + JSON.stringify(data));
+
         if ( data.type == "BRIDGE_STOPPED" ) {
             var index = $scope.findBridgeIndexWithId(data.data);
             if ( index != -1 ) {
@@ -165,6 +166,18 @@ amqBridgeApp.controller('amqBridgeCtrl', function($scope, $http) {
                 $scope.bridges[index].running = true;
             } else {
                 $scope.note = "received started event for unknown bridge id '" + data.data + "'";
+            }
+        }
+    }
+
+    $scope.onBridgeStats = function (data) {
+        debug("BRIDGE STATS: " + JSON.stringify(data));
+        if ( "bridgeId" in data ) {
+            var index = $scope.findBridgeIndexWithId(data.bridgeId);
+            if ( index != -1 ) {
+                $scope.bridges[index].stats = data;
+            } else {
+                $scope.note = "received stats event for unknown bridge id '" + data.bridgeId + "'";
             }
         }
     }
@@ -226,6 +239,8 @@ amqBridgeApp.controller('amqBridgeCtrl', function($scope, $http) {
                 $scope.onUpdateBridge(msg.data);
             } else if ( msg.action == "bridgeEvent" ) {
                 $scope.onBridgeEvent(msg.data);
+            } else if ( msg.action == "stats" ) {
+                $scope.onBridgeStats(msg.data);
             }
 
             if ( $scope.debug_log ) {
@@ -311,8 +326,8 @@ amqBridgeApp.controller('amqBridgeCtrl', function($scope, $http) {
         var index = $scope.findBridgeIndexWithId(id);
         if ( index != -1 ) {
             $scope.sendDeleteBridge(id);
-            $scope.bridges.splice(index, 1);
-            $scope.bridgesSnapshot.splice(index, 1);
+        } else {
+            debug("failed to locate bridge \"" + id + "\" to delete");
         }
     }
 
@@ -323,7 +338,7 @@ amqBridgeApp.controller('amqBridgeCtrl', function($scope, $http) {
             {
                 "id": newId,
                 "srcUrl": "failover://(tcp://localhost:61616)",
-                "destUrl": "failover://(tcp://localhost:61626",
+                "destUrl": "failover://(tcp://localhost:61626)",
                 "queueList": ["QUEUE-A", "QUEUE-B"],
                 "running": false,
                 "editMode": true,
@@ -340,5 +355,11 @@ amqBridgeApp.controller('amqBridgeCtrl', function($scope, $http) {
         }
     }
 
+    /**
+     * DEBUGGING
+     */
+    $scope.debug = function(msg) {
+        $scope.log.messages = $scope.log.messages.concat(data) + "\n";
+    }
 });
 

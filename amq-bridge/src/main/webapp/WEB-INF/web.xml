@@ -16,7 +16,13 @@
 		<listener-class>
 			org.springframework.web.context.ContextLoaderListener
 		</listener-class>
+    </listener>
+    <listener>
+        <listener-class>
+            com.amlinv.activemq.bridge.web.BridgeMetricsContextListener
+        </listener-class>
 	</listener>
+
 
     <servlet-mapping>
         <servlet-name>default</servlet-name>
@@ -35,6 +41,23 @@
 		<url-pattern>/api/*</url-pattern>
 	</servlet-mapping>
 
+    <servlet>
+        <servlet-name>CodahaleMetrics</servlet-name>
+        <servlet-class>com.codahale.metrics.servlets.MetricsServlet</servlet-class>
+        <init-param>
+            <param-name>com.codahale.metrics.servlets.MetricsServlet.registry</param-name>
+            <param-value>metricRegistry</param-value>
+        </init-param>
+        <init-param>
+            <param-name>metrics-uri</param-name>
+            <param-value>/</param-value>
+        </init-param>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>CodahaleMetrics</servlet-name>
+        <url-pattern>/metrics</url-pattern>
+    </servlet-mapping>
+
     <filter>
         <filter-name>CorsFilter</filter-name>
         <filter-class>org.apache.catalina.filters.CorsFilter</filter-class>
@@ -43,4 +66,5 @@
         <filter-name>CorsFilter</filter-name>
         <url-pattern>/*</url-pattern>
     </filter-mapping>
+
 </web-app>

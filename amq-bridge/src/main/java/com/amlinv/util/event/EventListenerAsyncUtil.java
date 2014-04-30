@@ -43,4 +43,8 @@ public class EventListenerAsyncUtil<EVENT_TYPE, EVENT_LISTENER extends EventList
 
         this.executor.queueEventSend(event, curListeners);
     }
+
+    public void shutdown () {
+        this.executor.shutdown();
+    }
 }
