@@ -62,7 +62,7 @@ public class AmqBridgeStatistics {
         synchronized ( this.messagesReceivedMeter ) {
             result[0] = this.messagesReceivedMeter.getMeanRate();
             result[1] = this.messagesReceivedMeter.getOneMinuteRate();
-            result[2] = this.messagesReceivedMeter.getFifteenMinuteRate();
+            result[2] = this.messagesReceivedMeter.getFiveMinuteRate();
             result[3] = this.messagesReceivedMeter.getFifteenMinuteRate();
         }
 
