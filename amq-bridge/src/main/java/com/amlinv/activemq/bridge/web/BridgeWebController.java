@@ -3,6 +3,8 @@ package com.amlinv.activemq.bridge.web;
 import com.amlinv.activemq.bridge.ctlr.AmqBridgeController;
 import com.amlinv.activemq.bridge.ctlr.events.AmqBridgeEvent;
 import com.amlinv.activemq.bridge.ctlr.events.AmqBridgeListener;
+import com.amlinv.activemq.bridge.engine.AmqBridge;
+import com.amlinv.activemq.bridge.engine.AmqBridgeStatistics;
 import com.amlinv.activemq.bridge.model.AmqBridgeSpec;
 
 import javax.ws.rs.*;
@@ -49,6 +51,15 @@ public class BridgeWebController {
         LOG.debug("listBridges");
 
         return  new LinkedList<AmqBridgeSpec>(this.engine.getBridgeSpecs().values());
+    }
+
+    @GET
+    @Path("/stats")
+    @Consumes("application/json")
+    public List<AmqBridgeStatistics> getAllBridgeStats() {
+        LOG.debug("getAllBridgeStats");
+
+        return  this.engine.getBridgeStats();
     }
 
     @PUT

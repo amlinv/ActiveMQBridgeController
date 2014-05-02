@@ -5,6 +5,7 @@ import static com.amlinv.activemq.bridge.ctlr.events.AmqBridgeEventSource.*;
 import com.amlinv.activemq.bridge.ctlr.events.*;
 import com.amlinv.activemq.bridge.engine.AmqBridge;
 import com.amlinv.activemq.bridge.engine.AmqBridgeConfigurationException;
+import com.amlinv.activemq.bridge.engine.AmqBridgeStatistics;
 import com.amlinv.activemq.bridge.model.AmqBridgeSpec;
 import com.amlinv.util.event.EventListenerAsyncUtil;
 import com.amlinv.util.service.*;
@@ -30,6 +31,23 @@ public class AmqBridgeController implements Service {
 
     public Map<String, AmqBridgeSpec> getBridgeSpecs() {
         return new HashMap<String, AmqBridgeSpec>(this.bridgeSpecs);
+    }
+
+    /**
+     * Obtain the statiscs for all of the active bridges.  Note that no statistics are currently maintained for
+     * inactive bridges.
+     *
+     * @return list of bridge statistics.
+     */
+    public List<AmqBridgeStatistics> getBridgeStats () {
+        // Loop through all of the bridge and add the statistics for each to the result list.
+        List<AmqBridgeStatistics>   result = new LinkedList<AmqBridgeStatistics>();
+        for ( AmqBridge oneBridge : this.activeBridges.values() ) {
+            result.add(oneBridge.getStatistics());
+        }
+
+        // Return the result list.
+        return  result;
     }
 
     public void addBridge (AmqBridgeSpec spec)

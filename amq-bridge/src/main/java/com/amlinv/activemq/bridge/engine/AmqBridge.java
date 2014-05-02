@@ -46,6 +46,10 @@ public class AmqBridge {
         this.stats     = new AmqBridgeStatistics(this.spec.getId());
     }
 
+    public AmqBridgeStatistics  getStatistics () {
+        return  this.stats;
+    }
+
     /**
      * Add a queue to the bridge and start forwarding messages from the queue at the source URL to the same queue at
      * the destination URL.

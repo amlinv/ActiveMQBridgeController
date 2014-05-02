@@ -7,6 +7,7 @@ var amqBridgeApp = angular.module('amqBridgeApp', ['ngAnimate', 'custom-filters'
 amqBridgeApp.controller('amqBridgeCtrl', function($scope, $http) {
     $scope.connection_state = "initializing";
     $scope.log = { "messages": "" };
+    $scope.statTimer = undefined;
 
     $scope.getBridgeList = function() {
         $http.get(
@@ -21,6 +22,13 @@ amqBridgeApp.controller('amqBridgeCtrl', function($scope, $http) {
                 $scope.note = "get bridge-list error";
             }
         );
+    }
+
+    $scope.startPeriodicStatRefresh = function (period) {
+        if ( $scope.statTimer ) {
+            clearInterval($scope.statTimer);
+        }
+        $scope.statTimer = setInterval(function() { $scope.refreshStats(); }, period);
     }
 
     $scope.sendCreateBridge = function(newBridge) {
@@ -74,6 +82,27 @@ amqBridgeApp.controller('amqBridgeCtrl', function($scope, $http) {
                 $scope.note = "delete bridge \"" + upd_bridge.id + "\" error";
             }
         );
+    }
+
+    $scope.sendStatsRequest = function() {
+        $http.get(
+            'api/bridges/stats',
+            { "headers" : { "Accept" : "application/json" } }
+        ).then (
+            function(response) {
+                $scope.updateStats(response.data);
+            }
+            ,
+            function(err) {
+                /* Haven't found any useful error details in the argument(s) */
+                $scope.note = "delete bridge \"" + upd_bridge.id + "\" error";
+            }
+        );
+    }
+
+    $scope.refreshStats = function () {
+        /* TBD */
+        $scope.sendStatsRequest();
     }
 
     /**
@@ -286,6 +315,15 @@ amqBridgeApp.controller('amqBridgeCtrl', function($scope, $http) {
         }
     }
 
+    $scope.updateStats = function (stats) {
+        /* TBD: what will the data format be? Array of object with bridge ID and stats..... */
+        var cur = 0;
+        while ( cur < stats.length ) {
+            $scope.onBridgeStats(stats[cur]);
+            cur++;
+        }
+    }
+
     $scope.saveBridgeEdits = function(id) {
         var index = $scope.findBridgeIndexWithId(id);
         if ( index != -1 ) {
@@ -365,5 +403,9 @@ amqBridgeApp.controller('amqBridgeCtrl', function($scope, $http) {
     $scope.debug = function(msg) {
         $scope.log.messages = $scope.log.messages.concat(msg) + "\n";
     }
-});
 
+    /**
+     * TBD: convert to using the Angular method of periodic refresh.
+     */
+    $scope.startPeriodicStatRefresh(3000);
+});
