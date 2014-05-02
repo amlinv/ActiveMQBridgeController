@@ -5,6 +5,8 @@ import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
 
 /**
+ * Statistics for an AmqBridge, including message counts and meters.
+ *
  * Created by art on 4/28/14.
  */
 public class AmqBridgeStatistics {
@@ -54,7 +56,9 @@ public class AmqBridgeStatistics {
 
     /**
      * Retrieve the message rates recorded: mean, 1 minute, 5 minutes, and 15 minute.
-     * @return
+     *
+     * @return  double[] array of message rates: [0] = mean; [1] = 1-min-mov-avg, [2] = 5-min-mov-avg,
+     *          [3] = 15-min-mov-avg
      */
     public double[] getRecordedMessageRates () {
         double[] result = new double[4];
@@ -83,7 +87,9 @@ public class AmqBridgeStatistics {
 
     /**
      * Retrieve the message rates recorded: mean, 1 minute, 5 minutes, and 15 minute.
-     * @return
+     *
+     * @return  double[] array of message error rates: [0] = mean; [1] = 1-min-mov-avg, [2] = 5-min-mov-avg,
+     *          [3] = 15-min-mov-avg
      */
     public double[] getErrorMessageRates () {
         double[] result = new double[4];

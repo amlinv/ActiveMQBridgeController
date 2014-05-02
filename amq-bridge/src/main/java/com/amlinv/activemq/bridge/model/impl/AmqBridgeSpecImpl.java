@@ -21,6 +21,7 @@ public class AmqBridgeSpecImpl implements AmqBridgeSpec {
     private boolean                         runningInd = false;
     private final List<AmqBridgeListener>   listeners = new LinkedList<AmqBridgeListener>();
     private List<String>                    queueList = new LinkedList<String>();
+    private List<String>                    topicList = new LinkedList<String>();
 
     @Override public String getId() {
         return id;
@@ -54,6 +55,16 @@ public class AmqBridgeSpecImpl implements AmqBridgeSpec {
     @Override
     public void setQueueList (List<String> list) {
         this.queueList = list;
+    }
+
+    @Override
+    public List<String> getTopicList () {
+        return  this.topicList;
+    }
+
+    @Override
+    public void setTopicList (List<String> list) {
+        this.topicList = list;
     }
 
     @JsonAnySetter

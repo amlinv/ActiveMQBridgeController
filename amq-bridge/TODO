@@ -1,0 +1,35 @@
+- Unit testing
+	- Add Java unit testing
+	- Add UI unit testing
+
+- REST
+	- Verify operation of REST calls against the REST standard.
+
+- Event Notifications
+	- Change event handlers to reduce the numbers of thread pools; one thread pool per bridge is too much.
+	- Change the QueueBridge to use a synchronous listener model since the calls are known to be handled quickly.
+	- Limit the rate of statistics updates to the UI.
+
+- UI enhancements and fixes
+	- Update the moving average statistics even when there is no activity.
+	- Correct the bridge active state at UI startup.
+	- Correct the bridge statistics at UI startup.
+	- Improve look-and-feel of the filter bar.
+	- Improve the active/inactive indicator.
+	- Fix: making window too narrow causes the left-hand panel to take over the screen.
+
+- ActiveMQ Functionality
+	- Add Topics.
+	- Support JMSReplyTo handling.
+	- Shutdown bridges on service shutdown.  Lingering ActiveMQ threads prevent Tomcat shutdown completion.
+	- Add Connection Listeners and Transport Listeners to report low level events and cleanup properly.
+
+- Persistence
+	- Add a means to persist the list of bridges.
+	- TO CONSIDER: UI save and load feature to user's machine (json file?)
+	- TO CONSIDER: pluggable persistence (JPA?)
+
+- Cleanup
+	- Comments
+	- Remove unused code
+	- Organize code better (especially the controllers.js script.  Modularize more and better)

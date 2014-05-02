@@ -293,6 +293,9 @@ amqBridgeApp.controller('amqBridgeCtrl', function($scope, $http) {
             if ( ( typeof(bridge.queueList) == "string" ) || ( bridge.queueList instanceof String ) ) {
                 bridge.queueList = bridge.queueList.split(",");
             }
+            if ( ( typeof(bridge.topicList) == "string" ) || ( bridge.topicList instanceof String ) ) {
+                bridge.topicList = bridge.topicList.split(",");
+            }
 
             if ( ( 'newBridge' in bridge ) && ( bridge.newBridge ) ) {
                 this.sendCreateBridge(bridge);
@@ -340,6 +343,7 @@ amqBridgeApp.controller('amqBridgeCtrl', function($scope, $http) {
                 "srcUrl": "failover://(tcp://localhost:61616)",
                 "destUrl": "failover://(tcp://localhost:61626)",
                 "queueList": ["QUEUE-A", "QUEUE-B"],
+                "topicList": ["TOPIC-A", "TOPIC-B"],
                 "running": false,
                 "editMode": true,
                 "newBridge": true

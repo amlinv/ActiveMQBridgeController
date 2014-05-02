@@ -11,7 +11,7 @@
   <script src="js/angular-custom.js"></script>
   <script src="js/controllers.js"></script>
 </head>
-<body ng-controller="amqBridgeCtrl" style="padding: 0;">
+<body data-ng-controller="amqBridgeCtrl" style="padding: 0;">
   <div class="col-md-1" style="background-color: lightgrey; height: 100%">
     <button class="btn-add" data-ng-click="addNewBridge();" style="width: 100%;">NEW &gt;&gt;</button>
     <br>
@@ -24,35 +24,39 @@
         <table class="table table-striped">
           <thead>
             <tr>
-                <th>ID</th> <th>Source URL</th> <th>Destination URL</th> <th>Queues</th> <th>Running</th>
-                <th>Operations</th>
+                <th>ID</th> <th>Source URL</th> <th>Destination URL</th> <th>Queues</th> <th>Topics</th>
+                <th>Running</th> <th>Operations</th>
             </tr>
           </thead>
-          <tbody ng-repeat="bridge in bridges | filter:srcUrlQuery">
-            <tr class="bridgeList" onload="initEditMode()" style="font-size: small">
+          <tbody data-ng-repeat="bridge in bridges | filter:srcUrlQuery">
+            <tr class="bridgeList" style="font-size: small">
               <td>
                 <span class="bridge-field" data-ng-hide="bridge.editMode">{{bridge.id}}</span>
-                <input type="text" ng-model="bridge.id" data-ng-show="bridge.editMode"></input>
+                <input id="bridge_id" type="text" data-ng-model="bridge.id" data-ng-show="bridge.editMode">
               </td>
               <td>
                 <span class="bridge-field" data-ng-hide="bridge.editMode">{{bridge.srcUrl}}</span>
-                <input type="text" ng-model="bridge.srcUrl" data-ng-show="bridge.editMode"></input>
+                <input type="text" data-ng-model="bridge.srcUrl" data-ng-show="bridge.editMode">
               </td>
               <td>
                 <span class="bridge-field" data-ng-hide="bridge.editMode">{{bridge.destUrl}}</span>
-                <input type="text" ng-model="bridge.destUrl" data-ng-show="bridge.editMode"></input>
+                <input type="text" data-ng-model="bridge.destUrl" data-ng-show="bridge.editMode">
               </td>
               <td>
                 <span class="bridge-field" data-ng-hide="bridge.editMode">{{bridge.queueList}}</span>
-                <input type="text" ng-model="bridge.queueList" data-ng-show="bridge.editMode"></input>
+                <input type="text" data-ng-model="bridge.queueList" data-ng-show="bridge.editMode">
+              </td>
+              <td>
+                  <span class="bridge-field" data-ng-hide="bridge.editMode">{{bridge.topicList}}</span>
+                  <input type="text" data-ng-model="bridge.topicList" data-ng-show="bridge.editMode">
               </td>
               <td>
                 <span class="bridge-field stopped-indicator" data-ng-hide="bridge.running">N</span>
                 <span class="bridge-field running-indicator" data-ng-show="bridge.running">Y</span>
               </td>
               <td>
-                <button class="btn-start" data-ng-hide="bridge.editMode" ng-click="startBridge(bridge.id)">START</button>
-                <button class="btn-stop" data-ng-hide="bridge.editMode" ng-click="stopBridge(bridge.id)">STOP</button>
+                <button class="btn-start" data-ng-hide="bridge.editMode" data-ng-click="startBridge(bridge.id)">START</button>
+                <button class="btn-stop" data-ng-hide="bridge.editMode" data-ng-click="stopBridge(bridge.id)">STOP</button>
                 <button class="btn-edit" data-ng-hide="bridge.editMode" data-ng-click="bridge.editMode = true; bridge.orig_id = bridge.id;">
                   EDIT</button>
                 <button class="btn-save" data-ng-show="bridge.editMode" data-ng-click="bridge.editMode = false; saveBridgeEdits(bridge.id);">
@@ -60,16 +64,21 @@
                 <button class="btn-cancel" data-ng-show="bridge.editMode" data-ng-click="bridge.editMode = false; undoBridgeEdits(bridge.id);">
                   CANCEL</button>
                 <button class="btn-delete" data-ng-click="deleteBridge(bridge.id);">
-                  DELETE</button>
+                  DEL</button>
               </td>
             </tr>
             <tr>
               <td colspan="6" data-ng-show="showStats">
-                <span class="col-md-2 stat-even">received: {{bridge.stats.numMessagesReceived}}</span>
-                <span class="col-md-2 stat-odd">rate: {{bridge.stats.messageRate | number:2 }}/sec</span>
-                <span class="col-md-4 stat-even">1/5/15 m.avg.: {{bridge.stats.recordedMessageRates[1] | number:2}}/{{bridge.stats.recordedMessageRates[2] | number:2}}/{{bridge.stats.recordedMessageRates[3] | number:2}}</span>
-                <span class="col-md-2 stat-odd">errors: {{bridge.stats.numErrorMessagesReceived}}</span>
-                <span class="col-md-2 stat-even">err.rate: {{bridge.stats.errorMessageRate | number:2 }}/sec</span>
+                <span class="col-md-2 stat-even" title="Number of messages received by the bridge">
+                    in: {{bridge.stats.numMessagesReceived}}</span>
+                <span class="col-md-2 stat-odd" title="Average rate of messages received by the bridge since started">
+                    rate: {{bridge.stats.messageRate | number:2 }}/sec</span>
+                <span class="col-md-4 stat-even" title="1, 5, and 15 minute moving average message rates received by the bridge">
+                    1/5/15 m.avg.: {{bridge.stats.recordedMessageRates[1] | number:2}}/{{bridge.stats.recordedMessageRates[2] | number:2}}/{{bridge.stats.recordedMessageRates[3] | number:2}}</span>
+                <span class="col-md-2 stat-odd" title="Number of messages with errors on forwarding by the bridge">
+                    errors: {{bridge.stats.numErrorMessagesReceived}}</span>
+                <span class="col-md-2 stat-even" title="Average rate of message errors caught by the bridge since started">
+                    err.rate: {{bridge.stats.errorMessageRate | number:2 }}/sec</span>
               </td>
             </tr>
           </tbody>
@@ -84,16 +93,16 @@
 
         <span style="background: grey">
           Source URL:
-          <select ng-model="srcUrlQuery.srcUrl">
-            <option ng-repeat="bridge in bridges | unique: 'srcUrl'">{{bridge.srcUrl}}</option>
+          <select data-ng-model="srcUrlQuery.srcUrl">
+            <option data-ng-repeat="bridge in bridges | unique: 'srcUrl'">{{bridge.srcUrl}}</option>
             <option value="">All</option>
           </select>
         </span>
 
         <span style="background: grey">
           Destination URL:
-          <select ng-model="destUrlQuery.destUrl">
-            <option ng-repeat="bridge in bridges | unique: 'destUrl'">{{bridge.destUrl}}</option>
+          <select data-ng-model="destUrlQuery.destUrl">
+            <option data-ng-repeat="bridge in bridges | unique: 'destUrl'">{{bridge.destUrl}}</option>
             <option value="">All</option>
           </select>
         </span>

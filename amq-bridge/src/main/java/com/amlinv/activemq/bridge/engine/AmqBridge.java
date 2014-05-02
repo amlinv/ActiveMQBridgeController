@@ -1,6 +1,7 @@
 package com.amlinv.activemq.bridge.engine;
 
 import com.amlinv.activemq.bridge.engine.impl.QueueBridgeFactoryDefaultImpl;
+import com.amlinv.activemq.bridge.engine.impl.TopicBridgeFactoryDefaultImpl;
 import com.amlinv.activemq.bridge.model.AmqBridgeSpec;
 import com.amlinv.activemq.bridge.web.AmqBridgeWebsocket;
 import org.apache.activemq.ActiveMQConnection;
@@ -31,13 +32,17 @@ public class AmqBridge {
     private boolean                     runningInd = false;
     private boolean                     stoppingInd = false;
     private List<String>                queueList;
+    private List<String>                topicList;
     private Map<String, QueueBridge>    queueBridges = new HashMap<String, QueueBridge>();
     private QueueBridgeFactory          queueBridgeFactory = new QueueBridgeFactoryDefaultImpl();
+    private Map<String, TopicBridge>    topicBridges = new HashMap<String, TopicBridge>();
+    private TopicBridgeFactory          topicBridgeFactory = new TopicBridgeFactoryDefaultImpl();
     private AmqBridgeStatistics         stats;
 
     public void setAmqBridgeSpec (AmqBridgeSpec inSpec) {
         this.spec      = inSpec;
         this.queueList = this.spec.getQueueList();
+        this.topicList = this.spec.getTopicList();
         this.stats     = new AmqBridgeStatistics(this.spec.getId());
     }
 
@@ -103,7 +108,7 @@ public class AmqBridge {
             this.destConn.start();
             // TBD: add exception handlers (and transport listeners)
 
-            this.startConsumers();
+            this.startDestinationBridges();
 
             complete = true;
         } finally {
@@ -158,16 +163,79 @@ public class AmqBridge {
         }
     }
 
-    protected void startConsumers() throws JMSException {
+    /**
+     * Start the individual destination bridges for each destination being forwarded.
+     *
+     * @throws JMSException
+     */
+    protected void startDestinationBridges () throws JMSException {
         for ( String queueName : this.queueList ) {
             this.startQueueBridge(queueName);
         }
+
+        for ( String topicName : this.topicList ) {
+            this.startTopicBridge(topicName);
+        }
     }
 
+    /**
+     * Start a Queue bridge for the Queue with the specified name.
+     *
+     * @param queueName - name of the Queue to forward.
+     * @throws JMSException - if an error occurs creating the bridge.
+     */
     protected void  startQueueBridge (String queueName) throws JMSException {
+        // Create the bridge.
         QueueBridge newBridge = queueBridgeFactory.createBridge(this.srcConn, this.destConn, queueName);
 
-        newBridge.addListener(new DestinationBridgeListener() {
+        // Make sure the bridge doesn't already exist; this is done after creating the bridge to keep the processing
+        // time in the critical section short.
+        synchronized ( this.queueBridges ) {
+            if ( this.queueBridges.containsKey(queueName) ) {
+                LOG.debug("skipping duplicate attempt to start queue bridge for queue {}", queueName);
+                return;
+            }
+
+            this.queueBridges.put(queueName, newBridge);
+        }
+
+        this.addDestinationBridgeListener(newBridge);
+        newBridge.start();
+    }
+
+    /**
+     * Start a Topic bridge for the Topic with the specified name.
+     *
+     * @param topicName - name of the Topic to forward.
+     * @throws JMSException - if an error occurs creating the bridge.
+     */
+    protected void  startTopicBridge (String topicName) throws JMSException {
+        // Create the bridge.
+        TopicBridge newBridge = topicBridgeFactory.createBridge(this.srcConn, this.destConn, topicName);
+
+        // Make sure the bridge doesn't already exist; this is done after creating the bridge to keep the processing
+        // time in the critical section short.
+        synchronized ( this.topicBridges ) {
+            if ( this.topicBridges.containsKey(topicName) ) {
+                LOG.debug("skipping duplicate attempt to start topic bridge for topic {}", topicName);
+                return;
+            }
+
+            this.topicBridges.put(topicName, newBridge);
+        }
+
+        this.addDestinationBridgeListener(newBridge);
+        newBridge.start();
+    }
+
+    /**
+     * Add the listener for the destination bridge given to capture statistics and status updates.  Note that the
+     * event handlers are called synchronously, so keep the processing short and with minimal blocking.
+     *
+     * @param bridge - the bridge on which to listen for events.
+     */
+    protected void  addDestinationBridgeListener (DestinationBridge bridge) {
+        bridge.addListener(new DestinationBridgeListener() {
             @Override
             public void onEvent(DestinationBridgeEvent event) {
                 switch ( event.getType() ) {
@@ -194,16 +262,6 @@ public class AmqBridge {
                 }
             }
         });
-        synchronized ( this.queueBridges ) {
-            if ( this.queueBridges.containsKey(queueName) ) {
-                LOG.debug("skipping duplicate attempt to start queue bridge for queue {}", queueName);
-                return;
-            }
-
-            this.queueBridges.put(queueName, newBridge);
-        }
-
-        newBridge.start();
     }
 
     protected void  fireStatsEvent () {

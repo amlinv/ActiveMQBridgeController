@@ -23,4 +23,8 @@ public interface AmqBridgeSpec {
     List<String>    getQueueList();
 
     void    setQueueList(List<String> queueList);
+
+    List<String>    getTopicList();
+
+    void    setTopicList(List<String> topicList);
 }
