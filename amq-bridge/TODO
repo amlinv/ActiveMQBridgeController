@@ -11,7 +11,7 @@
 	- Limit the rate of statistics updates to the UI.
 
 - UI enhancements and fixes
-	- Update the moving average statistics even when there is no activity.
+	- Update the moving average statistics even when there is no activity. [COMPLETE]
 	- Correct the bridge active state at UI startup.
 	- Correct the bridge statistics at UI startup.
 	- Improve look-and-feel of the filter bar.
@@ -19,7 +19,7 @@
 	- Fix: making window too narrow causes the left-hand panel to take over the screen.
 
 - ActiveMQ Functionality
-	- Add Topics.
+	- Add Topics. [COMPLETE]
 	- Support JMSReplyTo handling.
 	- Shutdown bridges on service shutdown.  Lingering ActiveMQ threads prevent Tomcat shutdown completion.
 	- Add Connection Listeners and Transport Listeners to report low level events and cleanup properly.
