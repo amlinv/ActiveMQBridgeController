@@ -95,7 +95,7 @@ amqBridgeApp.controller('amqBridgeCtrl', function($scope, $http) {
             ,
             function(err) {
                 /* Haven't found any useful error details in the argument(s) */
-                $scope.note = "delete bridge \"" + upd_bridge.id + "\" error";
+                $scope.note = "update bridge error";
             }
         );
     }
@@ -105,12 +105,6 @@ amqBridgeApp.controller('amqBridgeCtrl', function($scope, $http) {
         $scope.sendStatsRequest();
     }
 
-    /**
-     * Get the bridge list now.
-     */
-    $scope.getBridgeList();
-
-    $scope.connection_state = "connecting";
     $scope.onProcessOneBridge = function (bridge) {
         var bridge_copy = angular.copy(bridge);
 
@@ -248,50 +242,63 @@ amqBridgeApp.controller('amqBridgeCtrl', function($scope, $http) {
     }
 
     try {
-        var source = new WebSocket('ws://localhost:8080/ws/bridges');
+
+        var scheme;
+        var host_and_port;
+        var path;
+        if (window.location.protocol == "https:") {
+            scheme = "wss://";
+        } else {
+            scheme = "ws://";
+        }
+        host_and_port = window.location.host;
+        path = window.location.pathname.replace(/[^/]*$/, "");
+
+        var source = new WebSocket(scheme + host_and_port + path + "/ws/bridges");
+
+        source.onopen = function (event) {
+            $scope.$apply(function() { $scope.connection_state = "connected" });
+        }
+        source.onmessage = function (event) {
+            $scope.$apply(function() {
+                var msg = JSON.parse(event.data);
+
+                if ( msg.action == "add" ) {
+                    $scope.onAddBridge(msg.data);
+                } else if ( msg.action == "remove" ) {
+                    $scope.onRemoveBridge(msg.data);
+                } else if ( msg.action == "update" ) {
+                    $scope.onUpdateBridge(msg.data);
+                } else if ( msg.action == "bridgeEvent" ) {
+                    $scope.onBridgeEvent(msg.data);
+                } else if ( msg.action == "stats" ) {
+                    $scope.onBridgeStats(msg.data);
+                }
+
+                if ( $scope.debug_log ) {
+                    $scope.debug_log.append(event.data);
+                }
+            });
+        }
+        source.onerror = function (event) {
+            $scope.$apply(
+                function()
+                {
+                    $scope.note = "websocket error";
+                }
+            )
+        }
+
+        source.onclose = function (event) {
+            $scope.$apply(
+                function()
+                {
+                    $scope.connection_state = "disconnected";
+                }
+            );
+        }
     } catch ( exc ) {
         $scope.note = "websocket error";
-    }
-
-    source.onopen = function (event) {
-        $scope.$apply(function() { $scope.connection_state = "connected" });
-    }
-    source.onmessage = function (event) {
-        $scope.$apply(function() {
-            var msg = JSON.parse(event.data);
-
-            if ( msg.action == "add" ) {
-                $scope.onAddBridge(msg.data);
-            } else if ( msg.action == "remove" ) {
-                $scope.onRemoveBridge(msg.data);
-            } else if ( msg.action == "update" ) {
-                $scope.onUpdateBridge(msg.data);
-            } else if ( msg.action == "bridgeEvent" ) {
-                $scope.onBridgeEvent(msg.data);
-            } else if ( msg.action == "stats" ) {
-                $scope.onBridgeStats(msg.data);
-            }
-
-            if ( $scope.debug_log ) {
-                $scope.debug_log.append(event.data);
-            }
-        });
-    }
-    source.onerror = function (event) {
-        $scope.$apply(
-            function()
-            {
-                $scope.note = "websocket error";
-            }
-        )
-    }
-    source.onclose = function (event) {
-        $scope.$apply(
-            function()
-            {
-                $scope.connection_state = "disconnected";
-            }
-        );
     }
 
     $scope.matchBridge = function(actual, expected) {
@@ -403,6 +410,13 @@ amqBridgeApp.controller('amqBridgeCtrl', function($scope, $http) {
     $scope.debug = function(msg) {
         $scope.log.messages = $scope.log.messages.concat(msg) + "\n";
     }
+
+    /**
+     * Get the bridge list now.
+     */
+    $scope.getBridgeList();
+
+    $scope.connection_state = "connecting";
 
     /**
      * TBD: convert to using the Angular method of periodic refresh.
