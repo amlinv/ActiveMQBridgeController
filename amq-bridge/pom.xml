@@ -5,97 +5,103 @@
     <artifactId>amq-bridge</artifactId>
     <version>1.0.0-SNAPSHOT</version>
     <packaging>war</packaging>
-    <name>Simple CXF JAX-RS webapp service using spring configuration</name>
-    <description>Simple CXF JAX-RS webapp service using spring configuration</description>
-    <properties>
-        <jackson.version>1.8.6</jackson.version>
-        <cxf.version>2.4.10</cxf.version>
-        <spring.version>3.0.7.RELEASE</spring.version>
-        <metrics.version>3.0.1</metrics.version>
-    </properties>
+    <name>ActiveMQ Bridge :: Application</name>
+    <description>Application used to bridge destinations between ActiveMQ instances.</description>
+
+    <parent>
+      <groupId>com.amlinv</groupId>
+      <artifactId>amq-bridge-parent</artifactId>
+      <version>1.0.0-SNAPSHOT</version>
+    </parent>
+
     <dependencies>
         <dependency>
             <groupId>org.apache.cxf</groupId>
             <artifactId>cxf-rt-frontend-jaxrs</artifactId>
-            <version>${cxf.version}</version>
         </dependency>
-
         <dependency>
             <groupId>org.apache.activemq</groupId>
             <artifactId>activemq-client</artifactId>
-            <version>5.9.0</version>
         </dependency>
+
         <dependency>
             <groupId>com.codahale.metrics</groupId>
             <artifactId>metrics-core</artifactId>
-            <version>${metrics.version}</version>
         </dependency>
         <dependency>
             <groupId>com.codahale.metrics</groupId>
             <artifactId>metrics-servlets</artifactId>
-            <version>${metrics.version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.codehaus.jackson</groupId>
             <artifactId>jackson-core-asl</artifactId>
-            <version>${jackson.version}</version>
         </dependency>
         <dependency>
             <groupId>org.codehaus.jackson</groupId>
             <artifactId>jackson-mapper-asl</artifactId>
-            <version>${jackson.version}</version>
         </dependency>
          <dependency>
             <groupId>org.codehaus.jackson</groupId>
             <artifactId>jackson-jaxrs</artifactId>
-            <version>${jackson.version}</version>
         </dependency>
 
-	<!-- SPRING -->
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+        </dependency>
+
+        <!-- JMX TOOLS -->
+        <dependency>
+            <groupId>com.sun</groupId>
+            <artifactId>tools</artifactId>
+            <version>1.4.2</version>
+            <scope>system</scope>
+            <systemPath>${java.home}/../lib/tools.jar</systemPath>
+        </dependency>
+
+        <!-- JSON -->
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>2.3.1</version>
+        </dependency>
+
+        <!-- SPRING -->
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-asm</artifactId>
-            <version>${spring.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-core</artifactId>
-            <version>${spring.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-web</artifactId>
-            <version>${spring.version}</version>
         </dependency>
 
-	<!-- LOGGING -->
+        <!-- LOGGING -->
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
-            <version>1.7.5</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-log4j12</artifactId>
-            <version>1.7.5</version>
-        </dependency>
-
-	<!-- UNIT TESTS -->
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>4.11</version>
-            <scope>test</scope>
         </dependency>
 
         <dependency>
             <groupId>org.apache.tomcat</groupId>
             <artifactId>tomcat-catalina</artifactId>
-            <version>7.0.53</version>
-            <scope>provided</scope>
         </dependency>
 
+        <dependency>
+            <groupId>javax.websocket</groupId>
+            <artifactId>javax.websocket-api</artifactId>
+        </dependency>
+
+        <!-- INTEGRATION TESTS -->
         <dependency>
             <groupId>info.cukes</groupId>
             <artifactId>cucumber-java</artifactId>
@@ -122,11 +128,12 @@
             <scope>test</scope>
             <type>pom</type>
         </dependency>
+
+        <!-- UNIT TESTS -->
         <dependency>
-            <groupId>javax.websocket</groupId>
-            <artifactId>javax.websocket-api</artifactId>
-            <version>1.0</version>
-            <scope>provided</scope>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
         </dependency>
     </dependencies>
     <build>
@@ -154,8 +161,8 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
                     <configuration>
-                        <source>1.6</source>
-                        <target>1.6</target>
+                        <source>1.7</source>
+                        <target>1.7</target>
                     </configuration>
                 </plugin>
                 <plugin>

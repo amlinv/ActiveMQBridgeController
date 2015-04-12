@@ -18,9 +18,17 @@
     <button class="btn-toggle-stats" data-ng-click="showStats = ( ! showStats );" style="width: 100%;">
         TOGGLE STATS
     </button>
+    <button class="btn-show-monitor" data-ng-click="view = 'monitor'" data-ng-show="view != 'monitor'"
+            style="width: 100%;">
+        SHOW MONITOR
+    </button>
+    <button class="btn-show-bridges" data-ng-click="view = 'bridges'" data-ng-show="view != 'bridges'"
+            style="width: 100%;">
+        SHOW BRIDGES
+    </button>
   </div>
   <div class="col-md-11" style="height: 100%; padding: 0;">
-      <div style="width: 100%; padding-left: 1em; padding-right: 1em;">
+      <div style="width: 100%; padding-left: 1em; padding-right: 1em;" data-ng-show="view == 'bridges'">
         <table class="table table-striped">
           <thead>
             <tr>
@@ -83,6 +91,90 @@
             </tr>
           </tbody>
         </table>
+      </div>
+
+      <div data-ng-controller="amqMonitor" data-ng-show="view == 'monitor'">
+          <h1>MONITOR</h1>
+
+          <p>
+          STATE: {{connection_state}}
+
+          <table class="table table-striped">
+              <thead>
+              <tr>
+                  <th>Broker</th> <th>Up Time</th> <th>Memory % Usage</th> <th>Average Message Size</th>
+              </tr>
+              </thead>
+              <tbody data-ng-repeat="monitoredBroker in monitoredBrokers">
+              <tr class="bridgeList" style="font-size: small">
+                  <td>
+                      <input id="broker_name" type="text" data-ng-model="monitoredBroker.brokerStats.brokerName">
+                  </td>
+                  <td>
+                      <input id="broker_uptime" type="text" data-ng-model="monitoredBroker.brokerStats.uptime">
+                  </td>
+                  <td>
+                      <input id="broker_memory_pct_usage" type="text" data-ng-model="monitoredBroker.brokerStats.memoryPercentUsage">
+                  </td>
+                  <td>
+                      <input id="broker_average_message_size" type="text" data-ng-model="monitoredBroker.brokerStats.averageMessageSize">
+                  </td>
+              </tr>
+              </tbody>
+          </table>
+          <table class="table table-striped">
+              <thead>
+              <tr>
+                  <th>Queue</th> <th>Producers</th> <th>Consumers</th> <th>Queue Size</th> <th>Enqueue</th> <th>Dequeue</th>
+              </tr>
+              </thead>
+              <tbody data-ng-repeat="queueStat in queueStats">
+              <tr class="bridgeList" style="font-size: small">
+                  <td>
+                      <!--
+                       {
+                         "data" : {
+                            "queueStats" : {
+                               "monitor.test" : {
+                                  "numProducers" : 0,
+                                  "numConsumers" : 0,
+                                  "dequeueCount" : 16,
+                                  "queueSize" : 0,
+                                  "enqueueCount" : 16,
+                                  "queueName" : "monitor.test",
+                                  "brokerName" : "localhost"
+                               }
+                            },
+                            "brokerStats" : {
+                               "uptime" : "22 hours 50 minutes",
+                               "brokerName" : "localhost",
+                               "memoryLimit" : 2672505651,
+                               "averageMessageSize" : 1029,
+                               "memoryPercentUsage" : 0
+                            }
+                         },
+                         "action" : "brokerStats"
+                      } -->
+                      <input id="queue_name" type="text" data-ng-model="queueStat.queueName">
+                  </td>
+                  <td>
+                      <input id="queue_producer_count" type="text" data-ng-model="queueStat.numProducers">
+                  </td>
+                  <td>
+                      <input id="queue_consumer_count" type="text" data-ng-model="queueStat.numConsumers">
+                  </td>
+                  <td>
+                      <input id="queue_size" type="text" data-ng-model="queueStat.queueSize">
+                  </td>
+                  <td>
+                      <input id="queue_enqueue_count" type="text" data-ng-model="queueStat.enqueueCount">
+                  </td>
+                  <td>
+                      <input id="queue_dequeue_count" type="text" data-ng-model="queueStat.dequeueCount">
+                  </td>
+              </tr>
+              </tbody>
+          </table>
       </div>
 
       <div style="bottom: 2em; position: absolute;">

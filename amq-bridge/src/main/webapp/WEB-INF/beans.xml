@@ -20,6 +20,7 @@ http://cxf.apache.org/schemas/jaxrs.xsd">
    <jaxrs:server id="services" address="/">
     <jaxrs:serviceBeans>
       <bean class="com.amlinv.activemq.bridge.web.BridgeWebController" />
+      <bean class="com.amlinv.activemq.monitor.web.MonitorWebController" />
     </jaxrs:serviceBeans>
     <jaxrs:providers>
         <bean class="org.codehaus.jackson.jaxrs.JacksonJsonProvider"/>

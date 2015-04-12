@@ -9,6 +9,9 @@ amqBridgeApp.controller('amqBridgeCtrl', function($scope, $http) {
     $scope.log = { "messages": "" };
     $scope.statTimer = undefined;
 
+    // Default the opening view to the bridges view.
+    $scope.view = 'bridges';
+
     $scope.getBridgeList = function() {
         $http.get(
             'api/bridges', { "headers" : { "Accept" : "application/json" } }
@@ -242,7 +245,6 @@ amqBridgeApp.controller('amqBridgeCtrl', function($scope, $http) {
     }
 
     try {
-
         var scheme;
         var host_and_port;
         var path;
@@ -422,4 +424,98 @@ amqBridgeApp.controller('amqBridgeCtrl', function($scope, $http) {
      * TBD: convert to using the Angular method of periodic refresh.
      */
     $scope.startPeriodicStatRefresh(3000);
+});
+
+amqBridgeApp.controller('amqMonitor', function($scope, $http) {
+    $scope.debug_log = "Start of debug log. ";
+    $scope.connection_state = "monitor initializing";
+
+    $scope.monitoredBrokers = [];
+    $scope.queueStats = [];
+
+    try {
+        var scheme;
+        var host_and_port;
+        var path;
+        if (window.location.protocol == "https:") {
+            scheme = "wss://";
+        } else {
+            scheme = "ws://";
+        }
+        host_and_port = window.location.host;
+        path = window.location.pathname.replace(/[^/]*$/, "");
+
+        var source = new WebSocket(scheme + host_and_port + path + "/ws/monitor");
+
+        source.onopen = function (event) {
+            $scope.$apply(function() { $scope.connection_state = "monitor connected" });
+        }
+        source.onmessage = function (event) {
+            $scope.$apply(function() {
+                var msg = JSON.parse(event.data);
+
+                if ( msg.action == "brokerStats" ) {
+                    $scope.onMonitorBrokerStats(msg.data);
+                } else if ( msg.action == "queueStats" ) {
+                    $scope.onMonitorQueueStats(msg.data);
+                }
+
+                //if ( $scope.debug_log ) {
+                    $scope.debug_log = event.data;
+                //}
+            });
+        }
+        source.onerror = function (event) {
+            $scope.$apply(
+                function()
+                {
+                    $scope.note = "websocket error";
+                }
+            )
+        }
+
+        source.onclose = function (event) {
+            $scope.$apply(
+                function()
+                {
+                    $scope.connection_state = "monitor disconnected";
+                }
+            );
+        }
+    } catch ( exc ) {
+        $scope.note = "websocket error";
+    }
+
+    $scope.onMonitorBrokerStats = function(stats) {
+        if ( ( stats ) && ( stats.brokerStats ) && ( stats.brokerStats.brokerName ) ) {
+            var name = stats.brokerStats.brokerName;
+            var index;
+            if ( name in $scope.monitoredBrokers ) {
+                index = $scope.monitoredBrokers[name];
+            } else {
+                index = $scope.monitoredBrokers.length;
+                $scope.monitoredBrokers[name] = index;
+            }
+
+            //$scope.monitoredBrokers[stats.brokerStats.brokerName] = stats.brokerStats;
+            $scope.monitoredBrokers[index] = stats;
+
+            //$scope.calculateQueueStats();
+        }
+    }
+
+    $scope.onMonitorQueueStats = function(stats) {
+        var updatedQueueStats = [];
+
+        if ( stats ) {
+            var count = 0;
+            for ( var queueName in stats ) {
+                updatedQueueStats[count] = stats[queueName];
+                updatedQueueStats[count]['queueName'] = queueName;
+                count++;
+            }
+        }
+
+        $scope.queueStats = updatedQueueStats;
+    }
 });

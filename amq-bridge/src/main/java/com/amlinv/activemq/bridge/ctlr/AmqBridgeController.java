@@ -30,7 +30,9 @@ public class AmqBridgeController implements Service {
                                                 new EventListenerAsyncUtil("amq-bridge-event-sender-", 3, 5, 3000, 25);
 
     public Map<String, AmqBridgeSpec> getBridgeSpecs() {
-        return new HashMap<String, AmqBridgeSpec>(this.bridgeSpecs);
+        synchronized ( this.bridgeSpecs ) {
+            return new HashMap<String, AmqBridgeSpec>(this.bridgeSpecs);
+        }
     }
 
     /**
@@ -42,8 +44,10 @@ public class AmqBridgeController implements Service {
     public List<AmqBridgeStatistics> getBridgeStats () {
         // Loop through all of the bridge and add the statistics for each to the result list.
         List<AmqBridgeStatistics>   result = new LinkedList<AmqBridgeStatistics>();
-        for ( AmqBridge oneBridge : this.activeBridges.values() ) {
-            result.add(oneBridge.getStatistics());
+        synchronized ( this.activeBridges ) {
+            for (AmqBridge oneBridge : this.activeBridges.values()) {
+                result.add(oneBridge.getStatistics());
+            }
         }
 
         // Return the result list.

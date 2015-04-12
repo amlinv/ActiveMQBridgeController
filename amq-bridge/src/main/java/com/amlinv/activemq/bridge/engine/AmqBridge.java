@@ -174,11 +174,15 @@ public class AmqBridge {
      */
     protected void startDestinationBridges () throws JMSException {
         for ( String queueName : this.queueList ) {
-            this.startQueueBridge(queueName);
+            if ( ! queueName.isEmpty() ) {
+                this.startQueueBridge(queueName);
+            }
         }
 
         for ( String topicName : this.topicList ) {
-            this.startTopicBridge(topicName);
+            if ( ! topicName.isEmpty() ) {
+                this.startTopicBridge(topicName);
+            }
         }
     }
 
