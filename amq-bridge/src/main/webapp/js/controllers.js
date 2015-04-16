@@ -4,13 +4,25 @@
 
 var amqBridgeApp = angular.module('amqBridgeApp', ['ngAnimate', 'custom-filters']);
 
+amqBridgeApp.controller('viewSelector', function($scope, $http) {
+    $scope.view = 'bridges';
+
+    $scope.showBridges = function() {
+      $scope.view = 'bridges';
+    };
+
+    $scope.showMonitor = function() {
+      $scope.view = 'monitor';
+    };
+});
+
 amqBridgeApp.controller('amqBridgeCtrl', function($scope, $http) {
     $scope.connection_state = "initializing";
     $scope.log = { "messages": "" };
     $scope.statTimer = undefined;
 
-    // Default the opening view to the bridges view.
-    $scope.view = 'bridges';
+    //// Default the opening view to the bridges view.
+    //$scope.view = 'monitor';
 
     $scope.getBridgeList = function() {
         $http.get(
