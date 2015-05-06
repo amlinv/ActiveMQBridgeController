@@ -72,6 +72,18 @@ public class AmqBridgeSpecImpl implements AmqBridgeSpec {
         // Ignore extra fields.
     }
 
+    @Override
+    public AmqBridgeSpec copy () {
+        AmqBridgeSpec dup = new AmqBridgeSpecImpl();
+        dup.setDestUrl(this.destUrl);
+        dup.setSrcUrl(this.srcUrl);
+        dup.setId(this.id);
+        dup.setQueueList(new LinkedList<>(this.queueList));
+        dup.setTopicList(new LinkedList<>(this.topicList));
+
+        return  dup;
+    }
+
     public void addListener (AmqBridgeListener newListener) {
         synchronized ( listeners ) {
             this.listeners.add(newListener);

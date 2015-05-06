@@ -3,7 +3,6 @@ package com.amlinv.activemq.bridge.web;
 import com.amlinv.activemq.bridge.ctlr.AmqBridgeController;
 import com.amlinv.activemq.bridge.ctlr.events.AmqBridgeEvent;
 import com.amlinv.activemq.bridge.ctlr.events.AmqBridgeListener;
-import com.amlinv.activemq.bridge.engine.AmqBridge;
 import com.amlinv.activemq.bridge.engine.AmqBridgeStatistics;
 import com.amlinv.activemq.bridge.model.AmqBridgeSpec;
 
@@ -29,20 +28,14 @@ public class BridgeWebController {
 
     private final AmqBridgeController       engine;
 
-    BridgeWebController() {
-        this.engine = new AmqBridgeController();
+    BridgeWebController(AmqBridgeController initEngine) {
+        this.engine = initEngine;
         this.engine.addListener(new AmqBridgeListener() {
             @Override
             public void onEvent(AmqBridgeEvent bridgeEvent) {
                 fireEvent("bridgeEvent", objectToJson(bridgeEvent, "null"));
             }
         });
-
-        try {
-            this.engine.start();
-        } catch (Exception exc) {
-            LOG.error("failed to start bridge controller", exc);
-        }
     }
 
     @GET

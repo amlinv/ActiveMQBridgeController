@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE log4j:configuration SYSTEM "log4j.dtd">
+<log4j:configuration debug="false">
+    <appender name="CONSOLE" class="org.apache.log4j.ConsoleAppender">
+        <layout class="org.apache.log4j.EnhancedPatternLayout">
+            <param name="ConversionPattern" value="%d{ISO8601} %-5p [%t] %c - %m%n"/>
+        </layout>
+    </appender>
+    <logger name="com.jcraft.jsch">
+        <level value="warn" />
+    </logger>
+    <root>
+        <priority value="info"/>
+        <appender-ref ref="CONSOLE"/>
+    </root>
+</log4j:configuration>

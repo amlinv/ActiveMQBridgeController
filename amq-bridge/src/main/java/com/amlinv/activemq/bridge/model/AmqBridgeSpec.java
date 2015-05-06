@@ -1,5 +1,7 @@
 package com.amlinv.activemq.bridge.model;
 
+import com.amlinv.activemq.bridge.engine.AmqBridge;
+
 import java.util.List;
 
 /**
@@ -27,4 +29,6 @@ public interface AmqBridgeSpec {
     List<String>    getTopicList();
 
     void    setTopicList(List<String> topicList);
+
+    AmqBridgeSpec copy();
 }
