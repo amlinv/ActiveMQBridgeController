@@ -1,13 +1,12 @@
 package com.amlinv.activemq.monitor.jmx.polling;
 
-import com.amlinv.activemq.monitor.jmx.connection.JMXConnectionSource;
-import com.amlinv.activemq.monitor.jmx.connection.impl.JMXJvmIdConnectionSource;
-import com.amlinv.activemq.monitor.jmx.connection.impl.JMXRemoteUrlConnectionSource;
+import com.amlinv.activemq.monitor.jmx.connection.MBeanAccessConnection;
+import com.amlinv.activemq.monitor.jmx.connection.MBeanAccessConnectionFactory;
+import com.amlinv.activemq.monitor.jmx.connection.impl.JMXJvmIdConnectionFactory;
+import com.amlinv.activemq.monitor.jmx.connection.impl.JMXRemoteUrlConnectionFactory;
+import com.amlinv.activemq.monitor.jmx.connection.impl.JolokiaConnectionFactory;
 
-import javax.management.MBeanServerConnection;
 import javax.management.ObjectName;
-import javax.management.remote.JMXConnector;
-import java.net.MalformedURLException;
 import java.util.Set;
 
 /**
@@ -40,23 +39,26 @@ public class JmxActiveMQUtil {
      * <ul>
      *     <li>Full JMX url starting with "service:" (e.g. service:jmx:rmi:///jndi/rmi://localhost:1099/jmxrmi)</li>
      *     <li>JVM ID starting with "jvmId=" or "pid="</li>
+     *     <li>Jolokia URL starting with "jolokia:" (e.g. jolokia:http://localhost:8161/api/jolokia)</li>
      *     <li>Broker hostname and port separated by a colon (e.g. localhost:1099)</li>
      * </ul>
      * @param location
      * @return
      */
-    public static JMXConnectionSource getLocationConnectionSource (String location) throws Exception {
-        JMXConnectionSource result;
+    public static MBeanAccessConnectionFactory getLocationConnectionFactory (String location) throws Exception {
+        MBeanAccessConnectionFactory result;
         if ( location.startsWith("service:") ) {
-            result = new JMXRemoteUrlConnectionSource(location);
+            result = new JMXRemoteUrlConnectionFactory(location);
         } else if ( location.startsWith("jvmId=") || location.startsWith("pid=") ) {
             String id = location.replaceFirst("[^=]*=", "");
-            result = new JMXJvmIdConnectionSource(id);
+            result = new JMXJvmIdConnectionFactory(id);
+        } else if ( location.startsWith("jolokia:") ) {
+            result = new JolokiaConnectionFactory(location.replace("jolokia:", ""));
         } else {
             String parts[] = location.split(":");
             if ( parts.length == 2 ) {
                 String fullUrl = formatJmxUrl(parts[0], Integer.valueOf(parts[1]));
-                result = new JMXRemoteUrlConnectionSource(fullUrl);
+                result = new JMXRemoteUrlConnectionFactory(fullUrl);
             } else {
                 throw new Exception("invalid location: " + location);
             }
@@ -103,12 +105,12 @@ public class JmxActiveMQUtil {
     }
 
     protected static Set<ObjectName> execLocationQuery (String location, ObjectName pattern) throws Exception {
-        JMXConnectionSource connectionSource = getLocationConnectionSource(location);
-        JMXConnector connector = connectionSource.createConnection();
-        MBeanServerConnection mBeanServerConnection = connector.getMBeanServerConnection();
+        MBeanAccessConnectionFactory factory = getLocationConnectionFactory(location);
+        MBeanAccessConnection connection = factory.createConnection();
 
-        Set<ObjectName> matches;
-        matches = mBeanServerConnection.queryNames(pattern, null);
+        Set<ObjectName> matches = connection.queryNames(pattern, null);
+
+        connection.close();
 
         return  matches;
     }

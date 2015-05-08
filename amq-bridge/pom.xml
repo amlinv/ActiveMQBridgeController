@@ -17,7 +17,7 @@
     <dependencies>
         <dependency>
             <groupId>com.amlinv</groupId>
-            <artifactId>server-ctl-web</artifactId>
+            <artifactId>service-ctl-web</artifactId>
         </dependency>
 
         <dependency>
@@ -67,6 +67,13 @@
             <version>1.4.2</version>
             <scope>system</scope>
             <systemPath>${java.home}/../lib/tools.jar</systemPath>
+        </dependency>
+
+        <!-- JOLOKIA -->
+        <dependency>
+            <groupId>org.jolokia</groupId>
+            <artifactId>jolokia-client-java</artifactId>
+            <version>1.2.3</version>
         </dependency>
 
         <!-- JSON -->

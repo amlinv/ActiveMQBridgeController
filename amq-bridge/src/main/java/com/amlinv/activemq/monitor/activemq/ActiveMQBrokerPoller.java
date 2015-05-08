@@ -1,6 +1,7 @@
 package com.amlinv.activemq.monitor.activemq;
 
 import com.amlinv.activemq.monitor.jmx.connection.JMXConnectionSource;
+import com.amlinv.activemq.monitor.jmx.connection.MBeanAccessConnectionFactory;
 import com.amlinv.activemq.monitor.jmx.polling.JmxAttributePoller;
 import com.amlinv.activemq.monitor.model.ActiveMQBrokerStats;
 import com.amlinv.activemq.monitor.model.ActiveMQQueueStats;
@@ -30,7 +31,7 @@ public class ActiveMQBrokerPoller {
 
     private long pollingInterval = 1000;
 
-    private final JMXConnectionSource jmxConnectionSource;
+    private final MBeanAccessConnectionFactory mBeanAccessConnectionFactory;
     private final ActiveMQBrokerPollerListener listener;
     private MyJmxAttributePoller poller;
 
@@ -40,11 +41,11 @@ public class ActiveMQBrokerPoller {
     private boolean started = false;
     private boolean stopped = false;
 
-    public ActiveMQBrokerPoller(String brokerName, JMXConnectionSource jmxConnectionSource,
+    public ActiveMQBrokerPoller(String brokerName, MBeanAccessConnectionFactory mBeanAccessConnectionFactory,
                                 ActiveMQBrokerPollerListener listener) {
 
         this.brokerName = brokerName;
-        this.jmxConnectionSource = jmxConnectionSource;
+        this.mBeanAccessConnectionFactory = mBeanAccessConnectionFactory;
         this.listener = listener;
     }
 
@@ -123,7 +124,7 @@ public class ActiveMQBrokerPoller {
         List<Object> polled = this.preparePolledObjects(resultStorage);
 
         MyJmxAttributePoller newPoller = new MyJmxAttributePoller(polled, resultStorage);
-        newPoller.setJmxConnectionSource(this.jmxConnectionSource);
+        newPoller.setmBeanAccessConnectionFactory(this.mBeanAccessConnectionFactory);
 
         return  newPoller;
     }

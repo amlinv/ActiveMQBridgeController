@@ -16,7 +16,7 @@ public class ActiveMQBrokerStats implements MBeanLocationParameterSource {
 
     private long memoryLimit;
 
-    private int memoryPercentUsage;
+    private long memoryPercentUsage;
 
     public ActiveMQBrokerStats(String brokerName) {
         this.brokerName = brokerName;
@@ -53,12 +53,12 @@ public class ActiveMQBrokerStats implements MBeanLocationParameterSource {
         this.memoryLimit = memoryLimit;
     }
 
-    public int getMemoryPercentUsage() {
+    public long getMemoryPercentUsage() {
         return memoryPercentUsage;
     }
 
     @MBeanAttribute(name = "MemoryPercentUsage", type = int.class)
-    public void setMemoryPercentUsage(int memoryPercentUsage) {
+    public void setMemoryPercentUsage(long memoryPercentUsage) {
         this.memoryPercentUsage = memoryPercentUsage;
     }
 

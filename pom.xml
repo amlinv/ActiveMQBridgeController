@@ -88,17 +88,22 @@
             <!-- INNER-PROJECT DEPENDENCIES -->
             <dependency>
                 <groupId>com.amlinv</groupId>
-                <artifactId>server-ctl-web-api</artifactId>
+                <artifactId>service-ctl-web-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.amlinv</groupId>
-                <artifactId>server-ctl-web</artifactId>
+                <artifactId>service-ctl-web</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.amlinv</groupId>
-                <artifactId>server-ctl</artifactId>
+                <artifactId>service-ctl</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.amlinv</groupId>
+                <artifactId>service-util</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
@@ -240,8 +245,9 @@
 
     <modules>
         <module>amq-bridge</module>
-        <module>server-ctl</module>
-        <module>server-ctl-web</module>
-        <module>server-ctl-web-api</module>
+        <module>service-ctl</module>
+        <module>service-ctl-web</module>
+        <module>service-ctl-web-api</module>
+        <module>service-util</module>
     </modules>
 </project>

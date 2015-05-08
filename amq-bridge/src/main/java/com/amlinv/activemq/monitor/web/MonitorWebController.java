@@ -1,7 +1,7 @@
 package com.amlinv.activemq.monitor.web;
 
 import com.amlinv.activemq.monitor.activemq.ActiveMQBrokerPoller;
-import com.amlinv.activemq.monitor.jmx.connection.JMXConnectionSource;
+import com.amlinv.activemq.monitor.jmx.connection.MBeanAccessConnectionFactory;
 import com.amlinv.activemq.monitor.jmx.polling.JmxActiveMQUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,7 +51,8 @@ public class MonitorWebController {
 
         this.monitoredBrokers.add(address);
 
-        JMXConnectionSource jmxConnectionSource = JmxActiveMQUtil.getLocationConnectionSource(address);
+        MBeanAccessConnectionFactory mBeanAccessConnectionFactory =
+                JmxActiveMQUtil.getLocationConnectionFactory(address);
 
         if ( brokerName.equals("*") ) {
             String[] brokersAtLocation = JmxActiveMQUtil.queryBrokerNames(address);
@@ -64,7 +65,7 @@ public class MonitorWebController {
             }
         }
 
-        ActiveMQBrokerPoller brokerPoller = new ActiveMQBrokerPoller(brokerName, jmxConnectionSource,
+        ActiveMQBrokerPoller brokerPoller = new ActiveMQBrokerPoller(brokerName, mBeanAccessConnectionFactory,
                 new MonitorWebsocket.MyBrokerPollerListener());
 
         synchronized ( this.queueNames ) {

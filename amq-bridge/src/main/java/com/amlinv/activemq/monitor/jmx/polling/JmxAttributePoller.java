@@ -1,14 +1,14 @@
 package com.amlinv.activemq.monitor.jmx.polling;
 
 import com.amlinv.activemq.monitor.jmx.annotation.MBeanAnnotationUtil;
-import com.amlinv.activemq.monitor.jmx.connection.JMXConnectionSource;
+import com.amlinv.activemq.monitor.jmx.connection.MBeanAccessConnection;
+import com.amlinv.activemq.monitor.jmx.connection.MBeanAccessConnectionFactory;
 import com.amlinv.activemq.monitor.model.MBeanLocationParameterSource;
 import com.amlinv.logging.RepeatLogMessageSuppressor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.management.*;
-import javax.management.remote.JMXConnector;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -28,9 +28,8 @@ public class JmxAttributePoller {
 
     private final List<Object> polledObjects;
 
-    private JMXConnectionSource jmxConnectionSource;
-    private JMXConnector jmxConnector;
-    private MBeanServerConnection mBeanServerConnection;
+    private MBeanAccessConnectionFactory mBeanAccessConnectionFactory;
+    private MBeanAccessConnection mBeanAccessConnection;
 
     private RepeatLogMessageSuppressor logInstanceNotFoundThrottle = new RepeatLogMessageSuppressor();
     private RepeatLogMessageSuppressor logNoAttributeThrottle = new RepeatLogMessageSuppressor();
@@ -42,12 +41,12 @@ public class JmxAttributePoller {
         this.polledObjects = polledObjects;
     }
 
-    public JMXConnectionSource getJmxConnectionSource() {
-        return jmxConnectionSource;
+    public MBeanAccessConnectionFactory getmBeanAccessConnectionFactory() {
+        return mBeanAccessConnectionFactory;
     }
 
-    public void setJmxConnectionSource(JMXConnectionSource jmxConnectionSource) {
-        this.jmxConnectionSource = jmxConnectionSource;
+    public void setmBeanAccessConnectionFactory(MBeanAccessConnectionFactory mBeanAccessConnectionFactory) {
+        this.mBeanAccessConnectionFactory = mBeanAccessConnectionFactory;
     }
 
     public List<Object> getPolledObjects() {
@@ -84,8 +83,8 @@ public class JmxAttributePoller {
                 }
             }
         } catch ( IOException ioExc ) {
-            this.safeClose(this.jmxConnector);
-            this.jmxConnector = null;
+            this.safeClose(this.mBeanAccessConnection);
+            this.mBeanAccessConnection = null;
 
             throw ioExc;
         } finally {
@@ -115,10 +114,8 @@ public class JmxAttributePoller {
     }
 
     protected void  checkConnection () throws IOException {
-        if ( this.jmxConnector == null ) {
-            this.jmxConnector = this.jmxConnectionSource.createConnection();
-//            this.jmxConnector = JMXConnectorFactory.connect(new JMXServiceURL(this.jmxUrl));
-            this.mBeanServerConnection = this.jmxConnector.getMBeanServerConnection();
+        if ( this.mBeanAccessConnection == null ) {
+            this.mBeanAccessConnection = this.mBeanAccessConnectionFactory.createConnection();
         }
     }
 
@@ -157,7 +154,7 @@ public class JmxAttributePoller {
                     cur++;
                 }
 
-                AttributeList attributeValues = this.mBeanServerConnection.getAttributes(oname, attributeNames);
+                List<Attribute> attributeValues = this.mBeanAccessConnection.getAttributes(oname, attributeNames);
 
                 this.copyOutAttributes(obj, attributeValues, attributeSetters);
             } catch (InstanceNotFoundException infExc) {
@@ -170,11 +167,11 @@ public class JmxAttributePoller {
         }
     }
 
-    protected void copyOutAttributes (Object target, AttributeList jmxAttributeValues,
+    protected void copyOutAttributes (Object target, List<Attribute> jmxAttributeValues,
                                       Map<String, Method> attributeSetters)
             throws InvocationTargetException, IllegalAccessException {
 
-        for ( Attribute oneAttribute : jmxAttributeValues.asList() ) {
+        for ( Attribute oneAttribute : jmxAttributeValues ) {
             String attributeName = oneAttribute.getName();
 
             Method setter = attributeSetters.get(attributeName);
@@ -204,14 +201,14 @@ public class JmxAttributePoller {
         return  result.toString();
     }
 
-    protected void  safeClose (JMXConnector jmxConnector) {
+    protected void  safeClose (MBeanAccessConnection mBeanAccessConnector) {
         try {
-            if ( jmxConnector != null ) {
-                jmxConnector.close();
+            if ( mBeanAccessConnector != null ) {
+                mBeanAccessConnector.close();
             }
         } catch ( IOException ioExc ) {
-            log.warn("exception on shutdown of jmx connection to url={}",
-                    this.jmxConnectionSource.getTargetDescription(), ioExc);
+            log.warn("exception on shutdown of jmx connection to {}",
+                    this.mBeanAccessConnectionFactory.getTargetDescription(), ioExc);
         }
     }
 }

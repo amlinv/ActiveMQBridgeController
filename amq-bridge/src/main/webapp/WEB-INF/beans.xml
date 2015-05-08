@@ -11,7 +11,7 @@ http://cxf.apache.org/jaxrs
 http://cxf.apache.org/schemas/jaxrs.xsd">
 
   <import resource="classpath:META-INF/cxf/cxf.xml" />
-    <import resource="classpath*:activemq.xml" />
+  <import resource="classpath*:activemq-client.xml" />
 
   <context:property-placeholder/>
   <context:annotation-config/>
@@ -25,13 +25,13 @@ http://cxf.apache.org/schemas/jaxrs.xsd">
         <property name="threadNamePrefix" value="amq-bridge-executor" />
     </bean>
     
-    <bean id="spiritedAwayConsumerListener"
-          class="com.amlinv.activemq.nw_ctlr.impl.ActiveMQConsumerAdvisoryEventSource">
+    <!--<bean id="spiritedAwayConsumerListener"-->
+          <!--class="com.amlinv.activemq.nw_ctlr.impl.ActiveMQConsumerAdvisoryEventSource">-->
 
-        <constructor-arg ref="spiritedAwayPooledConnectionFactory" />
-        <constructor-arg value="SpiritedAway" />
-        <constructor-arg ref="appMainThreadPoolExecutor" />
-    </bean>
+        <!--<constructor-arg ref="spiritedAwayPooledConnectionFactory" />-->
+        <!--<constructor-arg value="SpiritedAway" />-->
+        <!--<constructor-arg ref="appMainThreadPoolExecutor" />-->
+    <!--</bean>-->
 
     <bean id="brokerRegistry" class="com.amlinv.activemq.registry.impl.DefaultBrokerRegistry">
         <constructor-arg>
@@ -54,16 +54,25 @@ http://cxf.apache.org/schemas/jaxrs.xsd">
     <bean id="topicRegistry" class="com.amlinv.activemq.registry.impl.DefaultDestinationRegistry" />
 
     <bean id="amqBridgeController" class="com.amlinv.activemq.bridge.ctlr.AmqBridgeController" init-method="start" />
-    <bean id="rubyNetworkController" class="com.amlinv.activemq.nw_ctlr.ruby.RubyNetworkController" init-method="start">
-        <constructor-arg ref="amqBridgeController" />
-        <constructor-arg>
-            <list>
-                <ref bean="spiritedAwayConsumerListener" />
-            </list>
-        </constructor-arg>
-        <constructor-arg ref="brokerRegistry" />
-        <constructor-arg ref="queueRegistry" />
-        <constructor-arg ref="topicRegistry" />
+
+    <!--<bean id="rubyNetworkController" class="com.amlinv.activemq.nw_ctlr.ruby.RubyNetworkController" init-method="start">-->
+        <!--<constructor-arg ref="amqBridgeController" />-->
+        <!--<constructor-arg>-->
+            <!--<list>-->
+                <!--<ref bean="spiritedAwayConsumerListener" />-->
+            <!--</list>-->
+        <!--</constructor-arg>-->
+        <!--<constructor-arg ref="brokerRegistry" />-->
+        <!--<constructor-arg ref="queueRegistry" />-->
+        <!--<constructor-arg ref="topicRegistry" />-->
+    <!--</bean>-->
+
+    <!-- Registry of managed Services -->
+    <bean id="serviceRegistry" class="com.amlinv.server.util.ConcurrentRegistry" />
+    <bean id="executionRegistry" class="com.amlinv.server.util.ConcurrentRegistry" />
+    <bean id="serviceManager" class="com.amlinv.server_ctl.sapphire.SapphireServiceManager">
+        <constructor-arg ref="serviceRegistry" />
+        <constructor-arg ref="executionRegistry" />
     </bean>
 
     <jaxrs:server id="services" address="/">
@@ -71,9 +80,13 @@ http://cxf.apache.org/schemas/jaxrs.xsd">
             <bean class="com.amlinv.activemq.bridge.web.BridgeWebController">
                 <constructor-arg ref="amqBridgeController"/>
             </bean>
+
             <bean class="com.amlinv.activemq.monitor.web.MonitorWebController"/>
-            <bean class="com.amlinv.server_ctl.web.ServiceManager">
+
+            <bean class="com.amlinv.server_ctl.web.ServiceWebManager">
                 <property name="threadPoolExecutor" ref="appMainThreadPoolExecutor" />
+                <!--<property name="serviceRegistry" ref="serviceRegistry" />-->
+                <property name="serviceManager" ref="serviceManager" />
             </bean>
         </jaxrs:serviceBeans>
         <jaxrs:providers>
