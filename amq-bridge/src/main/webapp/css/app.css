@@ -115,3 +115,11 @@ button {
     background-color: white;
     color: black;
 }
+
+.breakoutStats {
+    font-size: 50%;
+}
+
+.breakoutStats:hover {
+    font-size: 100%;
+}

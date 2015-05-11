@@ -17,7 +17,7 @@ public class JmxActiveMQUtil {
     public static final String JMX_URL_SUFFIX = "/jmxrmi";
     public static final String AMQ_BROKER_QUERY = "org.apache.activemq:type=Broker,brokerName=*";
     public static final String AMQ_BROKER_QUEUE_QUERY =
-            "org.apache.activemq:type=Broker,brokerName=%s,destinationType=Queue,destinationName=*";
+            "org.apache.activemq:type=Broker,brokerName=%s,destinationType=Queue,destinationName=%s";
 
     public static final String AMQ_BROKER_NAME_KEY = "brokerName";
     public static final String AMQ_QUEUE_NAME_KEY = "destinationName";
@@ -90,7 +90,7 @@ public class JmxActiveMQUtil {
         String[] names = null;
 
         Set<ObjectName> matches;
-        String pattern = String.format(AMQ_BROKER_QUEUE_QUERY, brokerName);
+        String pattern = String.format(AMQ_BROKER_QUEUE_QUERY, brokerName, queueNamePattern);
         matches = execLocationQuery(location, new ObjectName(pattern));
 
         names = new String[matches.size()];

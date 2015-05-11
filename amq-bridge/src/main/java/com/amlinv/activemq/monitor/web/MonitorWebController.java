@@ -99,13 +99,20 @@ public class MonitorWebController {
 
     @DELETE
     @Path("/broker")
-    @Consumes({ "application/json", "application/xml", "application/x-www-form-urlencoded" })
     @Produces("text/plain")
-    public String removeBroker (@FormParam("address") String address) {
+    public String removeBrokerForm (@FormParam("address") @QueryParam("address") String address) {
         String result;
-        ActiveMQBrokerPoller removedPoller;
+
+        result = performBrokerRemoval(address);
+
+        return  result;
+    }
+
+    private String performBrokerRemoval(String address) {
+        String result;ActiveMQBrokerPoller removedPoller;
 
         // TBD: both brokerPollerMap and locations should be performed in a single atomic update, not separate atomic updates
+        // TBD: one address can have more than one broker
         synchronized ( this.brokerPollerMap ) {
             removedPoller = this.brokerPollerMap.remove(address);
         }
@@ -120,8 +127,7 @@ public class MonitorWebController {
         } else {
             result = "not found";
         }
-
-        return  result;
+        return result;
     }
 
     @PUT
@@ -132,7 +138,7 @@ public class MonitorWebController {
                             @DefaultValue("*") @FormParam("brokerName") String queryBroker,
                             @DefaultValue("*") @FormParam("address") String address) throws Exception {
 
-        Set<String> additionalQueueNames = new TreeSet<>();
+        Set<String> additionalQueueNames;
         if ( queueName.endsWith("*") ) {
             additionalQueueNames = queryQueueNames(address, queryBroker, queueName);
         } else {
@@ -148,6 +154,36 @@ public class MonitorWebController {
             for (ActiveMQBrokerPoller oneBrokerPoller : this.brokerPollerMap.values() ) {
                 for ( String oneQueueName : additionalQueueNames ) {
                     oneBrokerPoller.addMonitoredQueue(oneQueueName);
+                }
+            }
+        }
+
+        return  "added";
+    }
+
+    @DELETE
+    @Path("/queue")
+    @Produces("text/plain")
+    public String removeQueue (@FormParam("queueName") String queueName,
+                            @DefaultValue("*") @FormParam("brokerName") String queryBroker,
+                            @DefaultValue("*") @FormParam("address") String address) throws Exception {
+
+        Set<String> additionalQueueNames;
+        if ( queueName.endsWith("*") ) {
+            additionalQueueNames = queryQueueNames(address, queryBroker, queueName);
+        } else {
+            additionalQueueNames = new TreeSet<>();
+            additionalQueueNames.add(queueName);
+        }
+
+        synchronized ( this.queueNames ) {
+            this.queueNames.removeAll(additionalQueueNames);
+        }
+
+        synchronized ( this.brokerPollerMap ) {
+            for (ActiveMQBrokerPoller oneBrokerPoller : this.brokerPollerMap.values() ) {
+                for ( String oneQueueName : additionalQueueNames ) {
+                    oneBrokerPoller.removeMonitoredQueue(oneQueueName);
                 }
             }
         }

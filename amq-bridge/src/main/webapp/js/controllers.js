@@ -2,7 +2,7 @@
 
 /* Controllers */
 
-var amqBridgeApp = angular.module('amqBridgeApp', ['ngAnimate', 'custom-filters']);
+var amqBridgeApp = angular.module('amqBridgeApp', ['ngAnimate', 'custom-filters', 'angular-loading-bar']);
 
 amqBridgeApp.controller('viewSelector', function($scope, $http) {
     $scope.view = 'bridges';
@@ -37,14 +37,14 @@ amqBridgeApp.controller('amqBridgeCtrl', function($scope, $http) {
                 $scope.note = "get bridge-list error";
             }
         );
-    }
+    };
 
     $scope.startPeriodicStatRefresh = function (period) {
         if ( $scope.statTimer ) {
             clearInterval($scope.statTimer);
         }
         $scope.statTimer = setInterval(function() { $scope.refreshStats(); }, period);
-    }
+    };
 
     $scope.sendCreateBridge = function(newBridge) {
         $scope.debug("Send create-bridge to server: " + JSON.stringify(newBridge));
@@ -62,7 +62,7 @@ amqBridgeApp.controller('amqBridgeCtrl', function($scope, $http) {
                 $scope.note = "create bridge \"" + newBridge.id + "\" error";
             }
         );
-    }
+    };
 
     $scope.sendUpdateBridge = function(upd_bridge) {
         $scope.debug(JSON.stringify(upd_bridge));
@@ -80,7 +80,7 @@ amqBridgeApp.controller('amqBridgeCtrl', function($scope, $http) {
                 $scope.note = "update bridge \"" + upd_bridge.id + "\" error";
             }
         );
-    }
+    };
 
     $scope.sendDeleteBridge = function(id) {
         $http.delete(
@@ -97,7 +97,7 @@ amqBridgeApp.controller('amqBridgeCtrl', function($scope, $http) {
                 $scope.note = "delete bridge \"" + upd_bridge.id + "\" error";
             }
         );
-    }
+    };
 
     $scope.sendStatsRequest = function() {
         $http.get(
@@ -113,12 +113,12 @@ amqBridgeApp.controller('amqBridgeCtrl', function($scope, $http) {
                 $scope.note = "update bridge error";
             }
         );
-    }
+    };
 
     $scope.refreshStats = function () {
         /* TBD */
         $scope.sendStatsRequest();
-    }
+    };
 
     $scope.onProcessOneBridge = function (bridge) {
         var bridge_copy = angular.copy(bridge);
@@ -141,7 +141,7 @@ amqBridgeApp.controller('amqBridgeCtrl', function($scope, $http) {
             $scope.bridges[index] = bridge_copy;
             $scope.bridgesSnapshot[index] = angular.copy(bridge_copy);
         }
-    }
+    };
 
     $scope.onAddBridge = function (upd) {
         var copy = angular.copy(upd);
@@ -155,7 +155,7 @@ amqBridgeApp.controller('amqBridgeCtrl', function($scope, $http) {
         } else {
             $scope.onProcessOneBridge(copy);
         }
-    }
+    };
 
     /* TBD: more efficient solution */
     $scope.findBridgeIndexWithId = function (id) {
@@ -171,7 +171,7 @@ amqBridgeApp.controller('amqBridgeCtrl', function($scope, $http) {
         }
 
         return  -1;
-    }
+    };
 
     $scope.onRemoveBridge = function (data) {
         var cur = $scope.bridges.length - 1;
@@ -182,11 +182,11 @@ amqBridgeApp.controller('amqBridgeCtrl', function($scope, $http) {
             }
             cur--;
         }
-    }
+    };
 
     $scope.onUpdateBridge = function (data) {
         // TBD
-    }
+    };
 
     $scope.onBridgeEvent = function (data) {
         $scope.debug("BRIDGE EVENT: " + JSON.stringify(data));
@@ -206,7 +206,7 @@ amqBridgeApp.controller('amqBridgeCtrl', function($scope, $http) {
                 $scope.note = "received started event for unknown bridge id '" + data.data + "'";
             }
         }
-    }
+    };
 
     $scope.onBridgeStats = function (data) {
         $scope.debug("BRIDGE STATS: " + JSON.stringify(data));
@@ -218,7 +218,7 @@ amqBridgeApp.controller('amqBridgeCtrl', function($scope, $http) {
                 $scope.note = "received stats event for unknown bridge id '" + data.bridgeId + "'";
             }
         }
-    }
+    };
 
     $scope.startBridge = function (id) {
         $scope.note = "requesting start of bridge " + id;
@@ -236,7 +236,7 @@ amqBridgeApp.controller('amqBridgeCtrl', function($scope, $http) {
                 $scope.note = "error starting bridge " + id;
             }
         );
-    }
+    };
 
     $scope.stopBridge = function (id) {
         $scope.note = "requesting stop of bridge " + id;
@@ -254,7 +254,7 @@ amqBridgeApp.controller('amqBridgeCtrl', function($scope, $http) {
                 $scope.note = "error stopping bridge " + id;
             }
         );
-    }
+    };
 
     try {
         var scheme;
@@ -321,7 +321,7 @@ amqBridgeApp.controller('amqBridgeCtrl', function($scope, $http) {
         }
 
         return  false;
-    }
+    };
 
     $scope.updateBridgeList = function(newList) {
         $scope.bridges = newList;
@@ -334,7 +334,7 @@ amqBridgeApp.controller('amqBridgeCtrl', function($scope, $http) {
             $scope.bridgeIndex[$scope.bridges[cur].id] = cur;
             cur++;
         }
-    }
+    };
 
     $scope.updateStats = function (stats) {
         /* TBD: what will the data format be? Array of object with bridge ID and stats..... */
@@ -343,7 +343,7 @@ amqBridgeApp.controller('amqBridgeCtrl', function($scope, $http) {
             $scope.onBridgeStats(stats[cur]);
             cur++;
         }
-    }
+    };
 
     $scope.saveBridgeEdits = function(id) {
         var index = $scope.findBridgeIndexWithId(id);
@@ -364,7 +364,7 @@ amqBridgeApp.controller('amqBridgeCtrl', function($scope, $http) {
 
             $scope.bridgesSnapshot[index] = angular.copy($scope.bridges[index]);
         }
-    }
+    };
 
     $scope.undoBridgeEdits = function(id) {
         var index = $scope.findBridgeIndexWithId(id);
@@ -382,7 +382,7 @@ amqBridgeApp.controller('amqBridgeCtrl', function($scope, $http) {
                 $scope.bridges[index] = angular.copy($scope.bridgesSnapshot[index]);
             }
         }
-    }
+    };
 
     $scope.deleteBridge = function(id) {
         var index = $scope.findBridgeIndexWithId(id);
@@ -391,7 +391,7 @@ amqBridgeApp.controller('amqBridgeCtrl', function($scope, $http) {
         } else {
             $scope.debug("failed to locate bridge \"" + id + "\" to delete");
         }
-    }
+    };
 
     $scope.addNewBridge = function() {
         var randNum = Math.floor(Math.random() * 1000 ) % 1000;
@@ -409,21 +409,21 @@ amqBridgeApp.controller('amqBridgeCtrl', function($scope, $http) {
             };
 
         this.onAddBridge(bridge);
-    }
+    };
 
     $scope.startEdit = function(id) {
         var index = $scope.findBridgeIndexWithId(id);
         if ( index != -1 ) {
             $scope.bridges[index].editMode = true;
         }
-    }
+    };
 
     /**
      * DEBUGGING
      */
     $scope.debug = function(msg) {
         $scope.log.messages = $scope.log.messages.concat(msg) + "\n";
-    }
+    };
 
     /**
      * Get the bridge list now.
@@ -435,9 +435,14 @@ amqBridgeApp.controller('amqBridgeCtrl', function($scope, $http) {
     /**
      * TBD: convert to using the Angular method of periodic refresh.
      */
-    $scope.startPeriodicStatRefresh(3000);
+    // TBD999: is this needed with the websocket?
+    //$scope.startPeriodicStatRefresh(3000);
 });
 
+
+//
+// MONITOR
+//
 amqBridgeApp.controller('amqMonitor', function($scope, $http) {
     $scope.debug_log = "Start of debug log. ";
     $scope.connection_state = "monitor initializing";
@@ -461,7 +466,7 @@ amqBridgeApp.controller('amqMonitor', function($scope, $http) {
 
         source.onopen = function (event) {
             $scope.$apply(function() { $scope.connection_state = "monitor connected" });
-        }
+        };
         source.onmessage = function (event) {
             $scope.$apply(function() {
                 var msg = JSON.parse(event.data);
@@ -476,7 +481,7 @@ amqBridgeApp.controller('amqMonitor', function($scope, $http) {
                     $scope.debug_log = event.data;
                 //}
             });
-        }
+        };
         source.onerror = function (event) {
             $scope.$apply(
                 function()
@@ -484,7 +489,7 @@ amqBridgeApp.controller('amqMonitor', function($scope, $http) {
                     $scope.note = "websocket error";
                 }
             )
-        }
+        };
 
         source.onclose = function (event) {
             $scope.$apply(
@@ -509,12 +514,9 @@ amqBridgeApp.controller('amqMonitor', function($scope, $http) {
                 $scope.monitoredBrokers[name] = index;
             }
 
-            //$scope.monitoredBrokers[stats.brokerStats.brokerName] = stats.brokerStats;
             $scope.monitoredBrokers[index] = stats;
-
-            //$scope.calculateQueueStats();
         }
-    }
+    };
 
     $scope.onMonitorQueueStats = function(stats) {
         var updatedQueueStats = [];
@@ -529,5 +531,166 @@ amqBridgeApp.controller('amqMonitor', function($scope, $http) {
         }
 
         $scope.queueStats = updatedQueueStats;
-    }
+    };
+
+    $scope.addMonitorBroker = function() {
+        var spec = prompt("Please specify the broker location and broker name in the format " +
+                          "broker-name/location; broker-name is optional", "broker/location");
+
+        if ( spec != "" ) {
+            var brokerName = "*";
+            var brokerLocation = "";
+
+            var pos = spec.indexOf("/");
+            if ( pos != -1 ) {
+                brokerName = spec.substr(0, pos);
+                brokerLocation = spec.substr(pos + 1);
+            } else {
+                brokerLocation = spec;
+            }
+
+            $scope.sendAddMonitorBroker(brokerName, brokerLocation);
+        }
+    };
+
+    $scope.removeMonitorBroker = function() {
+        var spec = prompt("Please specify the broker location and broker name in the format " +
+                          "broker-name/location; broker-name is optional", "broker/location");
+
+        if ( spec != "" ) {
+            var brokerName = "*";
+            var brokerLocation = "";
+
+            var pos = spec.indexOf("/");
+            if ( pos != -1 ) {
+                brokerName = spec.substr(0, pos);
+                brokerLocation = spec.substr(pos + 1);
+            } else {
+                brokerLocation = spec;
+            }
+
+            $scope.sendRemoveMonitorBroker(brokerName, brokerLocation);
+        }
+    };
+
+    $scope.addMonitorQueue = function() {
+        var queueName = prompt("Please specify the queue to monitor, or * to add all known queues");
+
+        if ( queueName != "" ) {
+            $scope.sendAddMonitorQueue(queueName);
+        }
+    };
+
+    $scope.removeMonitorQueue = function() {
+        var queueName = prompt("Please specify the queue to remove, or * to remove all known queues");
+
+        if ( queueName != "" ) {
+            $scope.sendRemoveMonitorQueue(queueName);
+        }
+    };
+
+    $scope.startMonitor = function() {
+        $scope.sendStartMonitor();
+    };
+
+    $scope.sendAddMonitorBroker = function(brokerName, brokerLocation) {
+        var requestBody = {
+            "brokerName": brokerName,
+            "address" : brokerLocation
+        };
+
+        //$scope.debug("Send add-monitor-broker to server: " + JSON.stringify(requestBody));
+        $http.put(
+            'api/monitor/broker/',
+            $.param(requestBody),
+            { "headers" : { "Accept" : "application/json", 'Content-Type': 'application/x-www-form-urlencoded' } }
+        ).then (
+            function(response) {
+                $scope.note = "added broker " + brokerName + "/" + brokerLocation;
+            }
+            ,
+            function(err) {
+                /* Haven't found any useful error details in the argument(s) */
+                $scope.note = "error adding broker " + brokerName + "/" + brokerLocation;
+            }
+        );
+    };
+
+    $scope.sendRemoveMonitorBroker = function(brokerName, brokerLocation) {
+        var requestBody = {
+            "brokerName": brokerName,
+            "address" : brokerLocation
+        };
+
+        $http.delete(
+            'api/monitor/broker/',
+            { params: requestBody }
+        ).then (
+            function(response) {
+                $scope.note = "removed broker " + brokerName + "/" + brokerLocation;
+            }
+            ,
+            function(err) {
+                /* Haven't found any useful error details in the argument(s) */
+                $scope.note = "error on remove broker " + brokerName + "/" + brokerLocation;
+            }
+        );
+    };
+
+    $scope.sendAddMonitorQueue = function(queueName) {
+        var requestBody = {
+            "queueName": queueName
+        };
+
+        //$scope.debug("Send add-monitor-broker to server: " + JSON.stringify(requestBody));
+        $http.put(
+            'api/monitor/queue',
+            $.param(requestBody),
+            { "headers" : { 'Content-Type': 'application/x-www-form-urlencoded' } }
+        ).then (
+            function(response) {
+                $scope.note = "added queue " + queueName;
+            }
+            ,
+            function(err) {
+                /* Haven't found any useful error details in the argument(s) */
+                $scope.note = "error adding queue \"" + queueName;
+            }
+        );
+    };
+
+    $scope.sendRemoveMonitorQueue = function(queueName) {
+        var requestBody = {
+            "queueName": queueName
+        };
+
+        $http.delete(
+            'api/monitor/queue',
+            { params: requestBody }
+        ).then (
+            function(response) {
+                $scope.note = "removed queue " + queueName;
+            }
+            ,
+            function(err) {
+                /* Haven't found any useful error details in the argument(s) */
+                $scope.note = "error on remove queue " + queueName;
+            }
+        );
+    };
+
+    $scope.sendStartMonitor = function() {
+        $http.get(
+            'api/monitor/start'
+        ).then (
+            function(response) {
+                $scope.note = "monitor started";
+            }
+            ,
+            function(err) {
+                /* Haven't found any useful error details in the argument(s) */
+                $scope.note = "failed to start monitor";
+            }
+        );
+    };
 });

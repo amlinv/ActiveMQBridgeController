@@ -27,7 +27,13 @@ public class JolokiaConnectionFactory implements MBeanAccessConnectionFactory {
 
     @Override
     public MBeanAccessConnection createConnection() throws IOException {
-        J4pClient client = new J4pClient(this.jolokiaUrl);
+        J4pClient client = J4pClient
+                .url(this.jolokiaUrl)
+                .pooledConnections()
+                .maxConnectionPoolTimeout(30000)    // 30 seconds; default is 0.5 seconds -- far too short.
+                .maxTotalConnections(5)
+                .build();
+
         JolokiaConnection connection = new JolokiaConnection(client);
 
         return connection;

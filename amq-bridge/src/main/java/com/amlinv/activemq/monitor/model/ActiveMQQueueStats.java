@@ -16,6 +16,9 @@ public class ActiveMQQueueStats implements MBeanLocationParameterSource {
     private long dequeueCount;
     private long numConsumers;
     private long numProducers;
+    private int cursorPercentUsage;
+    private int memoryPercentUsage;
+    private long inflightCount;
 
     public ActiveMQQueueStats(String brokerName, String queueName) {
         this.brokerName = brokerName;
@@ -73,6 +76,33 @@ public class ActiveMQQueueStats implements MBeanLocationParameterSource {
     @MBeanAttribute(name = "ProducerCount", type = long.class)
     public void setNumProducers(long numProducers) {
         this.numProducers = numProducers;
+    }
+
+    public int getCursorPercentUsage() {
+        return cursorPercentUsage;
+    }
+
+    @MBeanAttribute(name = "CursorPercentUsage", type = int.class)
+    public void setCursorPercentUsage(int cursorPercentUsage) {
+        this.cursorPercentUsage = cursorPercentUsage;
+    }
+
+    public int getMemoryPercentUsage() {
+        return memoryPercentUsage;
+    }
+
+    @MBeanAttribute(name = "MemoryPercentUsage", type = int.class)
+    public void setMemoryPercentUsage(int memoryPercentUsage) {
+        this.memoryPercentUsage = memoryPercentUsage;
+    }
+
+    public long getInflightCount() {
+        return inflightCount;
+    }
+
+    @MBeanAttribute(name = "InFlightCount", type = long.class)
+    public void setInflightCount(long inflightCount) {
+        this.inflightCount = inflightCount;
     }
 
     @Override

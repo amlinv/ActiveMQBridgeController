@@ -100,15 +100,13 @@ public class MonitorWebsocket {
             queueStatsByBroker.put(brokerStats.getBrokerName(), queueStats);
         }
 
+        // TBD: not every time (use a timer and/or check for all polled brokers reporting in)
         String brokerStatsJson = gson.toJson(brokerStatsPackage);
-
         fireMonitorEvent("brokerStats", brokerStatsJson);
 
         aggregateQueueStats();
 
-        // TBD: not every time (use a timer and/or check for all polled brokers reporting in)
         String queueStatsJson = gson.toJson(queueStatsMap);
-
         fireMonitorEvent("queueStats", queueStatsJson);
     }
 

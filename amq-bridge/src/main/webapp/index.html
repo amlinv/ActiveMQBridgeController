@@ -5,11 +5,13 @@
   <meta charset="UTF-8">
   <link rel="stylesheet" href="css/bootstrap.css">
   <link rel="stylesheet" href="css/app.css">
+  <link rel="stylesheet" href="css/loading-bar.min.css">
   <script src="js/angular.js"></script>
   <script src="js/jquery-1.11.0.js"></script>
   <script src="js/angular-animate.js"></script>
   <script src="js/angular-custom.js"></script>
   <script src="js/controllers.js"></script>
+  <script src="js/loading-bar.min.js"></script>
 </head>
 <body data-ng-controller="viewSelector" style="padding: 0;">
 <!--         -->
@@ -142,13 +144,40 @@
 <!-- MONITOR -->
 <!--         -->
 <div data-ng-controller="amqMonitor" data-ng-show="view == 'monitor'" style="height: 100%">
-  <div class="col-md-1" style="background-color: lightgrey; height: 100%">
+  <!-- NAV/CONTROL PANEL -->
+  <div class="col-md-1" style="background-color: lightgrey; height: 100%;">
     <button class="btn-show-bridges" data-ng-click="showBridges()" style="width: 100%;">
       SHOW BRIDGES
+    </button>
+    <br style="margin: 1em" />
+    <button class="btn-add" data-ng-click="startMonitor()" style="width: 100%;">
+      START MONITOR
+    </button>
+    <button class="btn-add" data-ng-click="addMonitorBroker()" style="width: 100%;">
+      ADD BROKER
+    </button>
+    <button class="btn-add" data-ng-click="addMonitorQueue()" style="width: 100%;">
+      ADD QUEUE
+    </button>
+    <button class="btn-delete" data-ng-click="removeMonitorBroker()" style="width: 100%;">
+      REMOVE BROKER
+    </button>
+    <button class="btn-delete" data-ng-click="removeMonitorQueue()" style="width: 100%;">
+      REMOVE QUEUE
+    </button>
+    <br>
+    <button class="btn-toggle-stats" data-ng-show="! showQueueBreakoutByBroker"
+            data-ng-click="showQueueBreakoutByBroker = true;" style="width: 100%;">
+      BREAKOUT &gt;&gt;&gt;
+    </button>
+    <button class="btn-toggle-stats" data-ng-show="showQueueBreakoutByBroker"
+            data-ng-click="showQueueBreakoutByBroker = false;" style="width: 100%;">
+      BREAKOUT &lt;&lt;&lt;
     </button>
   </div>
 
   <div class="col-md-11" style="height: 100%; padding: 0">
+    <!-- BROKER STATS -->
     <table class="table table-striped">
       <thead>
       <tr>
@@ -177,6 +206,7 @@
       </tr>
       </tbody>
     </table>
+    <!-- QUEUE STATS -->
     <table class="table table-striped">
       <thead>
       <tr>
@@ -188,25 +218,47 @@
         <th>Dequeue</th>
       </tr>
       </thead>
-      <tbody data-ng-repeat="queueStat in queueStats">
+      <tbody data-ng-repeat="queueStat in queueStats" style="overflow: auto;">
       <tr class="bridgeList" style="font-size: small">
         <td>
-          <input id="queue_name" type="text" data-ng-model="queueStat.queueName">
+          {{queueStat.queueName}}
         </td>
         <td>
-          <input id="queue_producer_count" type="text" data-ng-model="queueStat.numProducers">
+          {{queueStat.numProducers}}
         </td>
         <td>
-          <input id="queue_consumer_count" type="text" data-ng-model="queueStat.numConsumers">
+          <div>{{queueStat.numConsumers}}</div>
         </td>
         <td>
-          <input id="queue_size" type="text" data-ng-model="queueStat.queueSize">
+          <div>{{queueStat.queueSize}}</div>
         </td>
         <td>
-          <input id="queue_enqueue_count" type="text" data-ng-model="queueStat.enqueueCount">
+          <div>{{queueStat.enqueueCount}}</div>
         </td>
         <td>
-          <input id="queue_dequeue_count" type="text" data-ng-model="queueStat.dequeueCount">
+          <div>{{queueStat.dequeueCount}}</div>
+        </td>
+      </tr>
+      <tr class="breakoutStats"
+          data-ng-show="showQueueBreakoutByBroker"
+          data-ng-repeat="monitoredBroker in monitoredBrokers">
+        <td>
+            &nbsp;&nbsp;&nbsp;&nbsp;{{monitoredBroker.brokerStats.brokerName}}
+        </td>
+        <td>
+          {{monitoredBroker.queueStats[queueStat.queueName].numProducers}}
+        </td>
+        <td>
+          {{monitoredBroker.queueStats[queueStat.queueName].numConsumers}}
+        </td>
+        <td>
+          {{monitoredBroker.queueStats[queueStat.queueName].queueSize}}
+        </td>
+        <td>
+          {{monitoredBroker.queueStats[queueStat.queueName].enqueueCount}}
+        </td>
+        <td>
+          {{monitoredBroker.queueStats[queueStat.queueName].dequeueCount}}
         </td>
       </tr>
       </tbody>
@@ -216,7 +268,7 @@
             <span class="col-sm-4">
               <b>connection state:</b> {{connection_state}}
             </span>
-            <span class="note-text col-sm-4">
+            <span class="note-text col-sm-4" onclick="alert(this.textContent.trim());">
               <b>note:</b> {{note}}
             </span>
     </div>

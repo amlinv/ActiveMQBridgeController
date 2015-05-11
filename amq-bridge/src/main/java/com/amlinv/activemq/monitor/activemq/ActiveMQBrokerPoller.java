@@ -29,7 +29,7 @@ public class ActiveMQBrokerPoller {
     private Set<String> queueNames = new TreeSet<>();
     private Set<String> topicNames = new TreeSet<>();
 
-    private long pollingInterval = 1000;
+    private long pollingInterval = 5000;
 
     private final MBeanAccessConnectionFactory mBeanAccessConnectionFactory;
     private final ActiveMQBrokerPollerListener listener;
@@ -65,11 +65,43 @@ public class ActiveMQBrokerPoller {
         }
     }
 
+    public void removeMonitoredQueue (String name) {
+        MyJmxAttributePoller newPoller = null;
+
+        synchronized ( this ) {
+            this.queueNames.remove(name);
+
+            if ( this.started ) {
+                newPoller = this.prepareNewPoller();
+            }
+        }
+
+        if ( newPoller != null ) {
+            activateNewPoller(newPoller);
+        }
+    }
+
     public void addMonitoredTopic (String name) {
         MyJmxAttributePoller newPoller = null;
 
         synchronized ( this ) {
             this.topicNames.add(name);
+
+            if ( this.started ) {
+                newPoller = this.prepareNewPoller();
+            }
+        }
+
+        if ( newPoller != null ) {
+            activateNewPoller(newPoller);
+        }
+    }
+
+    public void removeMonitoredTopic (String name) {
+        MyJmxAttributePoller newPoller = null;
+
+        synchronized ( this ) {
+            this.topicNames.remove(name);
 
             if ( this.started ) {
                 newPoller = this.prepareNewPoller();
