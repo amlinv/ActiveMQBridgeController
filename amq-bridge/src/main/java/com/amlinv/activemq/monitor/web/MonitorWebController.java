@@ -10,6 +10,8 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 /**
  * Created by art on 3/31/15.
@@ -133,10 +135,10 @@ public class MonitorWebController {
     @PUT
     @Path("/queue")
     @Consumes({ "application/json", "application/xml", "application/x-www-form-urlencoded" })
-    @Produces("text/plain")
-    public String addQueue (@FormParam("queueName") String queueName,
-                            @DefaultValue("*") @FormParam("brokerName") String queryBroker,
-                            @DefaultValue("*") @FormParam("address") String address) throws Exception {
+    @Produces({ MediaType.APPLICATION_JSON })
+    public Response addQueue (@FormParam("queueName") String queueName,
+                              @DefaultValue("*") @FormParam("brokerName") String queryBroker,
+                              @DefaultValue("*") @FormParam("address") String address) throws Exception {
 
         Set<String> additionalQueueNames;
         if ( queueName.endsWith("*") ) {
@@ -158,37 +160,41 @@ public class MonitorWebController {
             }
         }
 
-        return  "added";
+        Response response = Response.ok(additionalQueueNames).build();
+
+        return  response;
     }
 
     @DELETE
     @Path("/queue")
-    @Produces("text/plain")
-    public String removeQueue (@FormParam("queueName") String queueName,
+    @Produces({ MediaType.APPLICATION_JSON })
+    public Response removeQueue (@FormParam("queueName") String queueName,
                             @DefaultValue("*") @FormParam("brokerName") String queryBroker,
                             @DefaultValue("*") @FormParam("address") String address) throws Exception {
 
-        Set<String> additionalQueueNames;
+        Set<String> removeQueueNames;
         if ( queueName.endsWith("*") ) {
-            additionalQueueNames = queryQueueNames(address, queryBroker, queueName);
+            removeQueueNames = queryQueueNames(address, queryBroker, queueName);
         } else {
-            additionalQueueNames = new TreeSet<>();
-            additionalQueueNames.add(queueName);
+            removeQueueNames = new TreeSet<>();
+            removeQueueNames.add(queueName);
         }
 
         synchronized ( this.queueNames ) {
-            this.queueNames.removeAll(additionalQueueNames);
+            this.queueNames.removeAll(removeQueueNames);
         }
 
         synchronized ( this.brokerPollerMap ) {
             for (ActiveMQBrokerPoller oneBrokerPoller : this.brokerPollerMap.values() ) {
-                for ( String oneQueueName : additionalQueueNames ) {
+                for ( String oneQueueName : removeQueueNames ) {
                     oneBrokerPoller.removeMonitoredQueue(oneQueueName);
                 }
             }
         }
 
-        return  "added";
+        Response response = Response.ok(removeQueueNames).build();
+
+        return  response;
     }
 
     @GET

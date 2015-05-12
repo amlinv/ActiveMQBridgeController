@@ -4,6 +4,11 @@
 
 var amqBridgeApp = angular.module('amqBridgeApp', ['ngAnimate', 'custom-filters', 'angular-loading-bar']);
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// VIEW SELECTOR
+//
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 amqBridgeApp.controller('viewSelector', function($scope, $http) {
     $scope.view = 'bridges';
 
@@ -16,6 +21,11 @@ amqBridgeApp.controller('viewSelector', function($scope, $http) {
     };
 });
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//
+// BRIDGE CONTROLLER
+//
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 amqBridgeApp.controller('amqBridgeCtrl', function($scope, $http) {
     $scope.connection_state = "initializing";
     $scope.log = { "messages": "" };
@@ -440,15 +450,22 @@ amqBridgeApp.controller('amqBridgeCtrl', function($scope, $http) {
 });
 
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //
 // MONITOR
 //
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 amqBridgeApp.controller('amqMonitor', function($scope, $http) {
     $scope.debug_log = "Start of debug log. ";
     $scope.connection_state = "monitor initializing";
 
     $scope.monitoredBrokers = [];
-    $scope.queueStats = [];
+    $scope.displayQueueStats = [];
+
+    $scope.queueData = {
+        queues: {}
+    };
+
 
     try {
         var scheme;
@@ -505,32 +522,57 @@ amqBridgeApp.controller('amqMonitor', function($scope, $http) {
 
     $scope.onMonitorBrokerStats = function(stats) {
         if ( ( stats ) && ( stats.brokerStats ) && ( stats.brokerStats.brokerName ) ) {
-            var name = stats.brokerStats.brokerName;
+            var brokerName = stats.brokerStats.brokerName;
             var index;
-            if ( name in $scope.monitoredBrokers ) {
-                index = $scope.monitoredBrokers[name];
+            if ( brokerName in $scope.monitoredBrokers ) {
+                index = $scope.monitoredBrokers[brokerName];
             } else {
                 index = $scope.monitoredBrokers.length;
-                $scope.monitoredBrokers[name] = index;
+                $scope.monitoredBrokers[brokerName] = index;
             }
 
             $scope.monitoredBrokers[index] = stats;
+
+            if ( stats.queueStats ) {
+                for (var queueName in stats.queueStats) {
+                    if ( queueName in $scope.queueData.queues ) {
+                        var allBrokerDetailsForQueue = $scope.queueData.queues[queueName].brokerDetails;
+                        if ( ! ( brokerName in allBrokerDetailsForQueue ) ) {
+                            allBrokerDetailsForQueue[brokerName] = { 'brokerName': brokerName };
+                        }
+
+                        var oneBrokerDetailsForQueue = allBrokerDetailsForQueue[brokerName];
+                        var incomingQueueStatsForBroker = stats.queueStats[queueName];
+                        for ( var attr in incomingQueueStatsForBroker ) {
+                            oneBrokerDetailsForQueue[attr] = incomingQueueStatsForBroker[attr];
+                        }
+                    }
+                }
+            }
         }
     };
 
     $scope.onMonitorQueueStats = function(stats) {
-        var updatedQueueStats = [];
-
         if ( stats ) {
-            var count = 0;
             for ( var queueName in stats ) {
-                updatedQueueStats[count] = stats[queueName];
-                updatedQueueStats[count]['queueName'] = queueName;
-                count++;
+                var updatedStats = stats[queueName];
+
+                if ( ! ( queueName in $scope.queueData.queues ) ) {
+                    $scope.onMonitoredQueueAdded(queueName);
+                }
+
+                //
+                // Copy over all of the statistics (copy individual values to keep the object reference unchanged).
+                //  Statistics are copied instead of simply replacing the entire structure for performance; otherwise,
+                //  angular appears to spend a lot more time, probably from making DOM modifications, causing notable
+                //  delay for the user navigating the page and increase in CPU usage.
+                //
+                var queueData = $scope.queueData.queues[queueName];
+                for ( var attr in updatedStats ) {
+                    queueData[attr] = updatedStats[attr];
+                }
             }
         }
-
-        $scope.queueStats = updatedQueueStats;
     };
 
     $scope.addMonitorBroker = function() {
@@ -650,6 +692,16 @@ amqBridgeApp.controller('amqMonitor', function($scope, $http) {
         ).then (
             function(response) {
                 $scope.note = "added queue " + queueName;
+
+                //
+                // Process the list of queue names returned to make sure they are displayed in the UI.
+                //
+                var addedQueueNames = response.data;
+                var iter = 0;
+                while ( iter < addedQueueNames.length ) {
+                    $scope.onMonitoredQueueAdded(addedQueueNames[iter]);
+                    iter++;
+                }
             }
             ,
             function(err) {
@@ -670,6 +722,16 @@ amqBridgeApp.controller('amqMonitor', function($scope, $http) {
         ).then (
             function(response) {
                 $scope.note = "removed queue " + queueName;
+
+                //
+                // Remove the queues from the UI if they are still there.
+                //
+                var removedQueueNames = response.data;
+                var iter = 0;
+                while ( iter < removedQueueNames.length ) {
+                    $scope.onMonitoredQueueRemoved(removedQueueNames[iter]);
+                    iter++;
+                }
             }
             ,
             function(err) {
@@ -693,4 +755,32 @@ amqBridgeApp.controller('amqMonitor', function($scope, $http) {
             }
         );
     };
+
+    $scope.onMonitoredQueueAdded = function (queueName) {
+        //
+        // Add the queue to the display, if it's not already added.
+        //
+        if ( ! ( queueName in $scope.queueData.queues ) ) {
+            var stats = {
+                brokerName: "totals",
+                queueName: queueName,
+                brokerDetails: {}
+            };
+
+            var newCount = $scope.displayQueueStats.push(stats);
+            $scope.queueData.queues[queueName] = stats;
+        }
+    }
+
+    $scope.onMonitoredQueueRemoved = function (queueName) {
+        if ( queueName in $scope.queueData.queues ) {
+            var rmStats = $scope.queueData.queues[queueName];
+            delete $scope.queueData.queues[queueName];
+
+            var pos = $scope.displayQueueStats.indexOf(rmStats);
+            if ( pos != -1 ) {
+                $scope.displayQueueStats.splice(pos, 1);
+            }
+        }
+    }
 });

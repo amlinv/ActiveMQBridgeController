@@ -122,4 +122,6 @@ button {
 
 .breakoutStats:hover {
     font-size: 100%;
+    color: white;
+    background-color: black;
 }

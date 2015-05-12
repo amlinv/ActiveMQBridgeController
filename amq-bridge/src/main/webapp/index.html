@@ -207,7 +207,7 @@
       </tbody>
     </table>
     <!-- QUEUE STATS -->
-    <table class="table table-striped">
+    <table class="table">
       <thead>
       <tr>
         <th>Queue</th>
@@ -218,7 +218,7 @@
         <th>Dequeue</th>
       </tr>
       </thead>
-      <tbody data-ng-repeat="queueStat in queueStats" style="overflow: auto;">
+      <tbody data-ng-repeat="queueStat in displayQueueStats | orderBy:'queueName'" style="overflow: auto;">
       <tr class="bridgeList" style="font-size: small">
         <td>
           {{queueStat.queueName}}
@@ -241,24 +241,24 @@
       </tr>
       <tr class="breakoutStats"
           data-ng-show="showQueueBreakoutByBroker"
-          data-ng-repeat="monitoredBroker in monitoredBrokers">
+          data-ng-repeat="brokerStatsForQueue in queueStat.brokerDetails | orderBy:'brokerName'">
         <td>
-            &nbsp;&nbsp;&nbsp;&nbsp;{{monitoredBroker.brokerStats.brokerName}}
+          &nbsp;&nbsp;&nbsp;&nbsp;{{brokerStatsForQueue.brokerName}}
         </td>
         <td>
-          {{monitoredBroker.queueStats[queueStat.queueName].numProducers}}
+          {{brokerStatsForQueue.numProducers}}
         </td>
         <td>
-          {{monitoredBroker.queueStats[queueStat.queueName].numConsumers}}
+          {{brokerStatsForQueue.numConsumers}}
         </td>
         <td>
-          {{monitoredBroker.queueStats[queueStat.queueName].queueSize}}
+          {{brokerStatsForQueue.queueSize}}
         </td>
         <td>
-          {{monitoredBroker.queueStats[queueStat.queueName].enqueueCount}}
+          {{brokerStatsForQueue.enqueueCount}}
         </td>
         <td>
-          {{monitoredBroker.queueStats[queueStat.queueName].dequeueCount}}
+          {{brokerStatsForQueue.dequeueCount}}
         </td>
       </tr>
       </tbody>
