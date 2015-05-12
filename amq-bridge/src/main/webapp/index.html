@@ -17,8 +17,8 @@
 <!--         -->
 <!-- BRIDGES -->
 <!--         -->
-<div data-ng-controller="amqBridgeCtrl" data-ng-show="view == 'bridges'" style="height: 100%">
-  <div class="col-md-1" style="background-color: lightgrey; height: 100%">
+<div data-ng-controller="amqBridgeCtrl" data-ng-show="view == 'bridges'" style="width: 100%; height: 100%; position: absolute;">
+  <div class="col-md-1" style="background-color: lightgrey; height: 100%; position: fixed; z-index: 1">
     <button class="btn-show-monitor" data-ng-click="showMonitor()" style="width: 100%;">
       SHOW MONITOR
     </button>
@@ -29,7 +29,10 @@
     </button>
   </div>
 
-  <div class="col-md-11" style="height: 100%; padding: 0;">
+  <!-- reserve the space used by the nav/control panel so the rest lines up correctly -->
+  <div class="col-md-1" style="background-color: lightgrey; height: 100%; position: relative; z-index: -1"></div>
+
+  <div class="col-md-11" style="height: 100%; padding: 0; position: static;">
     <table class="table table-striped">
       <thead>
       <tr>
@@ -116,7 +119,7 @@
             </span>
     </div>
 
-    <div style="bottom: 2em; position: absolute;">
+    <div style="bottom: 2em; position: fixed;">
       <span style="background: lightgrey; padding-right: 1em; padding-left: 1em;">
         <b>Filtering</b>
       </span>
@@ -143,9 +146,9 @@
 <!--         -->
 <!-- MONITOR -->
 <!--         -->
-<div data-ng-controller="amqMonitor" data-ng-show="view == 'monitor'" style="height: 100%">
+<div data-ng-controller="amqMonitor" data-ng-show="view == 'monitor'" style="width: 100%; height: 100%; position: absolute;">
   <!-- NAV/CONTROL PANEL -->
-  <div class="col-md-1" style="background-color: lightgrey; height: 100%;">
+  <div class="col-md-1" style="background-color: lightgrey; height: 100%; position: fixed; z-index: 1;">
     <button class="btn-show-bridges" data-ng-click="showBridges()" style="width: 100%;">
       SHOW BRIDGES
     </button>
@@ -176,7 +179,10 @@
     </button>
   </div>
 
-  <div class="col-md-11" style="height: 100%; padding: 0">
+  <!-- reserve the space used by the nav/control panel so the rest lines up correctly -->
+  <div class="col-md-1" style="height: 100%; position: relative; z-index: -1"></div>
+
+  <div class="col-md-11" style="height: 100%; padding: 0; position: static;">
     <!-- BROKER STATS -->
     <table class="table table-striped">
       <thead>
