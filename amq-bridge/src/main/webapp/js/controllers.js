@@ -783,4 +783,41 @@ amqBridgeApp.controller('amqMonitor', function($scope, $http) {
             }
         }
     }
+
+    //
+    // FILTERING
+    //
+    $scope.setupDestinationFilter = function (filterName) {
+        if ( $scope.monitorDestinationQueryString ) {
+            $scope.monitorDestinationQuery = eval("(" + $scope.monitorDestinationQueryString + ")");
+        } else {
+            $scope.monitorDestinationQuery = "";
+        }
+    };
+
+    $scope.queueStatMatch = function(actual, expected) {
+        var negate = false;
+        var exact = false;
+
+        //
+        // Check for options.  First '!' negates, then '=' specifies exact match.  These must be in order (sorry).
+        //
+        if ( expected.charAt(0) == '!' ) {
+            negate = true;
+            expected = expected.substr(1);
+        }
+        if ( expected.charAt(0) == '=' ) {
+            exact = true;
+            expected = expected.substr(1);
+        }
+
+        var result;
+        if ( exact ) {
+            result = actual == expected;
+        } else {
+            result = ( actual.indexOf(expected) != -1 );
+        }
+
+        return result;
+    };
 });

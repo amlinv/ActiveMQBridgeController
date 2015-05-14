@@ -17,7 +17,9 @@
 <!--         -->
 <!-- BRIDGES -->
 <!--         -->
-<div data-ng-controller="amqBridgeCtrl" data-ng-show="view == 'bridges'" style="width: 100%; height: 100%; position: absolute;">
+<div data-ng-controller="amqBridgeCtrl" data-ng-show="view == 'bridges'"
+     style="width: 100%; height: 100%; position: absolute;">
+
   <div class="col-md-1" style="background-color: lightgrey; height: 100%; position: fixed; z-index: 1">
     <button class="btn-show-monitor" data-ng-click="showMonitor()" style="width: 100%;">
       SHOW MONITOR
@@ -114,12 +116,12 @@
             <span class="col-sm-4">
               <b>connection state:</b> {{connection_state}}
             </span>
-            <span class="note-text col-sm-4">
+            <span class="note-text col-sm-8">
               <b>note:</b> {{note}}
             </span>
     </div>
 
-    <div style="bottom: 2em; position: fixed;">
+    <div style="bottom: 2em; position: fixed; background-color: black;">
       <span style="background: lightgrey; padding-right: 1em; padding-left: 1em;">
         <b>Filtering</b>
       </span>
@@ -146,7 +148,9 @@
 <!--         -->
 <!-- MONITOR -->
 <!--         -->
-<div data-ng-controller="amqMonitor" data-ng-show="view == 'monitor'" style="width: 100%; height: 100%; position: absolute;">
+<div data-ng-controller="amqMonitor" data-ng-show="view == 'monitor'"
+     style="width: 100%; height: 100%; position: absolute;">
+
   <!-- NAV/CONTROL PANEL -->
   <div class="col-md-1" style="background-color: lightgrey; height: 100%; position: fixed; z-index: 1;">
     <button class="btn-show-bridges" data-ng-click="showBridges()" style="width: 100%;">
@@ -213,7 +217,7 @@
       </tbody>
     </table>
     <!-- QUEUE STATS -->
-    <table class="table">
+    <table class="table" style="border-bottom: 3em solid grey;">
       <thead>
       <tr>
         <th>Queue</th>
@@ -222,9 +226,11 @@
         <th>Queue Size</th>
         <th>Enqueue</th>
         <th>Dequeue</th>
+        <th>Cursor % Usage</th>
+        <th>Memory % Usage</th>
       </tr>
       </thead>
-      <tbody data-ng-repeat="queueStat in displayQueueStats | orderBy:'queueName'" style="overflow: auto;">
+      <tbody data-ng-repeat="queueStat in displayQueueStats | filter:monitorDestinationQuery:queueStatMatch | orderBy:'queueName'" style="overflow: auto;">
       <tr class="bridgeList" style="font-size: small">
         <td>
           {{queueStat.queueName}}
@@ -233,16 +239,22 @@
           {{queueStat.numProducers}}
         </td>
         <td>
-          <div>{{queueStat.numConsumers}}</div>
+          {{queueStat.numConsumers}}
         </td>
         <td>
-          <div>{{queueStat.queueSize}}</div>
+          {{queueStat.queueSize}}
         </td>
         <td>
-          <div>{{queueStat.enqueueCount}}</div>
+          {{queueStat.enqueueCount}}
         </td>
         <td>
-          <div>{{queueStat.dequeueCount}}</div>
+          {{queueStat.dequeueCount}}
+        </td>
+        <td>
+          {{queueStat.cursorPercentUsage}}
+        </td>
+        <td>
+          {{queueStat.memoryPercentUsage}}
         </td>
       </tr>
       <tr class="breakoutStats"
@@ -266,6 +278,12 @@
         <td>
           {{brokerStatsForQueue.dequeueCount}}
         </td>
+        <td>
+          {{brokerStatsForQueue.cursorPercentUsage}}
+        </td>
+        <td>
+          {{brokerStatsForQueue.memoryPercentUsage}}
+        </td>
       </tr>
       </tbody>
     </table>
@@ -274,11 +292,31 @@
             <span class="col-sm-4">
               <b>connection state:</b> {{connection_state}}
             </span>
-            <span class="note-text col-sm-4" onclick="alert(this.textContent.trim());">
+            <span class="note-text col-sm-8" onclick="alert(this.textContent.trim());">
               <b>note:</b> {{note}}
             </span>
     </div>
+
+    <!--           -->
+    <!-- FILTERING -->
+    <!--           -->
+    <div style="bottom: 2em; position: fixed; background: black;">
+        <span style="background: lightgrey; padding-right: 1em; padding-left: 1em;">
+          <b>Filtering</b>
+        </span>
+
+        <span style="background: grey">
+          <select data-ng-model="monitorDestinationQueryString" data-ng-change="setupDestinationFilter();">
+            <option value="">None</option>
+            <option value="{ queueSize : '!=0', numConsumers: '=0' }">
+              Idle Consumption</option>
+            <option value="{ queueSize : '!=0' }">Pending Messages</option>
+            <option value="{ queueSize : '=0', numConsumers: '=0', numProducers: '=0' }">Unused</option>
+          </select>
+        </span>
+    </div>
   </div>
+
 
 </div>
 

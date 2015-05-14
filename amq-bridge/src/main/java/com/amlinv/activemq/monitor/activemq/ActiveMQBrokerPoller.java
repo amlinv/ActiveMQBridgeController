@@ -29,7 +29,7 @@ public class ActiveMQBrokerPoller {
     private Set<String> queueNames = new TreeSet<>();
     private Set<String> topicNames = new TreeSet<>();
 
-    private long pollingInterval = 5000;
+    private long pollingInterval = 3000;
 
     private final MBeanAccessConnectionFactory mBeanAccessConnectionFactory;
     private final ActiveMQBrokerPollerListener listener;
