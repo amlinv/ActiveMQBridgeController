@@ -119,7 +119,8 @@ public class ActiveMQQueueStats implements MBeanLocationParameterSource {
     /**
      * Return a new queue stats structure with the total of the stats from this structure and the one given.  Returning
      * a new structure keeps all three structures unchanged, in the manner of immutability, to make it easier to have
-     * safe usage under concurrency.
+     * safe usage under concurrency.  The sum of percentages is not used, and instead the maximum percentage is
+     * returned.
      *
      * @param other
      * @param resultBrokerName
@@ -127,8 +128,10 @@ public class ActiveMQQueueStats implements MBeanLocationParameterSource {
      */
     public ActiveMQQueueStats add (ActiveMQQueueStats other, String resultBrokerName) {
         ActiveMQQueueStats result = new ActiveMQQueueStats(resultBrokerName, this.queueName);
+        result.setCursorPercentUsage(Math.max(this.getCursorPercentUsage(), other.getCursorPercentUsage()));
         result.setDequeueCount(this.getDequeueCount() + other.getDequeueCount());
         result.setEnqueueCount(this.getEnqueueCount() + other.getEnqueueCount());
+        result.setMemoryPercentUsage(Math.max(this.getMemoryPercentUsage(), other.getMemoryPercentUsage()));
         result.setNumConsumers(this.getNumConsumers() + other.getNumConsumers());
         result.setNumProducers(this.getNumProducers() + other.getNumProducers());
         result.setQueueSize(this.getQueueSize() + other.getQueueSize());
@@ -143,8 +146,10 @@ public class ActiveMQQueueStats implements MBeanLocationParameterSource {
      */
     public ActiveMQQueueStats copy (String brokerName) {
         ActiveMQQueueStats result = new ActiveMQQueueStats(brokerName, this.queueName);
+        result.setCursorPercentUsage(this.getCursorPercentUsage());
         result.setDequeueCount(this.getDequeueCount());
         result.setEnqueueCount(this.getEnqueueCount());
+        result.setMemoryPercentUsage(this.getMemoryPercentUsage());
         result.setNumConsumers(this.getNumConsumers());
         result.setNumProducers(this.getNumProducers());
         result.setQueueSize(this.getQueueSize());

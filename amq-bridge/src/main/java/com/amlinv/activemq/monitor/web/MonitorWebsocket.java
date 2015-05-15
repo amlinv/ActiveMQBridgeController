@@ -40,6 +40,7 @@ public class MonitorWebsocket {
     private static Gson gson = new Gson();
 
     // TBD999: eliminate all the statics (have the websocket register itself as one of any number of listeners)
+    // TBD999: process removals.  Probably use a registry of Queues and add a listener
     private static Map<String, Map<String, ActiveMQQueueStats>> queueStatsByBroker = new TreeMap<>();
     private static Map<String, ActiveMQQueueStats> queueStatsMap = new TreeMap<>();
 
