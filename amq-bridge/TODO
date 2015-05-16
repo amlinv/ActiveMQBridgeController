@@ -1,3 +1,10 @@
+- ADD broker total message counts to the collection and UI
+
+- LOG collected metrics
+
+- UI reorder destinations by activity level
+
+
 - Unit testing
 	- Add Java unit testing
 	- Add UI unit testing

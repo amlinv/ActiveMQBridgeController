@@ -50,8 +50,8 @@ http://cxf.apache.org/schemas/jaxrs.xsd">
         </constructor-arg>
     </bean>
 
-    <bean id="queueRegistry" class="com.amlinv.activemq.registry.impl.DefaultDestinationRegistry" />
-    <bean id="topicRegistry" class="com.amlinv.activemq.registry.impl.DefaultDestinationRegistry" />
+    <!--<bean id="queueRegistry" class="com.amlinv.activemq.registry.impl.DefaultDestinationRegistry" />-->
+    <!--<bean id="topicRegistry" class="com.amlinv.activemq.registry.impl.DefaultDestinationRegistry" />-->
 
     <bean id="amqBridgeController" class="com.amlinv.activemq.bridge.ctlr.AmqBridgeController" init-method="start" />
 
@@ -81,7 +81,9 @@ http://cxf.apache.org/schemas/jaxrs.xsd">
                 <constructor-arg ref="amqBridgeController"/>
             </bean>
 
-            <bean class="com.amlinv.activemq.monitor.web.MonitorWebController"/>
+            <bean class="com.amlinv.activemq.monitor.web.MonitorWebController">
+                <property name="websocketBrokerStatsFeed" ref="websocketBrokerStatsFeed" />
+            </bean>
 
             <bean class="com.amlinv.server_ctl.web.ServiceWebManager">
                 <property name="threadPoolExecutor" ref="appMainThreadPoolExecutor" />
@@ -94,4 +96,14 @@ http://cxf.apache.org/schemas/jaxrs.xsd">
         </jaxrs:providers>
     </jaxrs:server>
 
+    <!-- MONITORING WEBSOCKET -->
+    <bean id="monitorWebsocketRegistry" class="com.amlinv.activemq.monitor.web.MonitorWebsocketRegistry" />
+    <bean id="websocketBrokerStatsFeed" class="com.amlinv.activemq.monitor.web.MonitorWebsocketBrokerStatsFeed">
+        <property name="websocketRegistry" ref="monitorWebsocketRegistry" />
+    </bean>
+
+    <!-- CLASS STATIC FIELD INJECTORS -->
+    <bean class="com.amlinv.activemq.monitor.web.MonitorWebsocketStaticInjector">
+        <property name="registry" ref="monitorWebsocketRegistry" />
+    </bean>
 </beans>

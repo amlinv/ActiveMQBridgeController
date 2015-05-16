@@ -27,6 +27,8 @@ public class MonitorWebController {
     private Map<String, ActiveMQBrokerPoller> brokerPollerMap;
     private AtomicBoolean started = new AtomicBoolean(false);
 
+    private MonitorWebsocketBrokerStatsFeed websocketBrokerStatsFeed;
+
     public MonitorWebController() {
         this.monitoredBrokers = new TreeSet<String>();
         this.queueNames = new TreeSet<>();
@@ -34,6 +36,14 @@ public class MonitorWebController {
         this.locations = new TreeSet<>();
 
         this.brokerPollerMap = new TreeMap<>();
+    }
+
+    public MonitorWebsocketBrokerStatsFeed getWebsocketBrokerStatsFeed() {
+        return websocketBrokerStatsFeed;
+    }
+
+    public void setWebsocketBrokerStatsFeed(MonitorWebsocketBrokerStatsFeed websocketBrokerStatsFeed) {
+        this.websocketBrokerStatsFeed = websocketBrokerStatsFeed;
     }
 
     @GET
@@ -67,8 +77,8 @@ public class MonitorWebController {
             }
         }
 
-        ActiveMQBrokerPoller brokerPoller = new ActiveMQBrokerPoller(brokerName, mBeanAccessConnectionFactory,
-                new MonitorWebsocket.MyBrokerPollerListener());
+        ActiveMQBrokerPoller brokerPoller =
+                new ActiveMQBrokerPoller(brokerName, mBeanAccessConnectionFactory, this.websocketBrokerStatsFeed);
 
         synchronized ( this.queueNames ) {
             for ( String oneQueueName : this.queueNames ) {
