@@ -216,7 +216,6 @@ public class ActiveMQBrokerPoller {
         this.onPollComplete(pollerSnapshot);
     }
 
-    // TBD: use a listener instead of directly calling into MonitorWebsocket
     protected void onPollComplete (MyJmxAttributePoller poller) {
         BrokerStatsPackage resultStorage = poller.getResultStorage();
         this.listener.onBrokerPollComplete(resultStorage);

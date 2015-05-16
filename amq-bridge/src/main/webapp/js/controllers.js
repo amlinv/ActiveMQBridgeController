@@ -492,6 +492,10 @@ amqBridgeApp.controller('amqMonitor', function($scope, $http) {
                     $scope.onMonitorBrokerStats(msg.data);
                 } else if ( msg.action == "queueStats" ) {
                     $scope.onMonitorQueueStats(msg.data);
+                } else if ( msg.action == "queueAdded" ) {
+                    $scope.onMonitoredQueueAdded(msg.data);
+                } else if ( msg.action == "queueRemoved" ) {
+                    $scope.onMonitoredQueueRemoved(msg.data);
                 }
 
                 //if ( $scope.debug_log ) {

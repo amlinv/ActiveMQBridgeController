@@ -58,8 +58,10 @@ public class MonitorWebsocket {
         LOG.debug("message from client {}", msg);
     }
 
-    public void  fireMonitorEvent(final String action, final String json) throws IOException {
-        String  msg = "{\"action\": \"" + action + "\", \"data\": " + json + "}";
+    // TBD: queue individually for each websocket, and limit the amount of queuing, so that a single slow
+    // TBD: or hung websocket connection does not overly impact others
+    public void  fireMonitorEvent(final String action, final String content) throws IOException {
+        String  msg = "{\"action\": \"" + action + "\", \"data\": " + content + "}";
 
         if ( this.socketSession != null ) {
             synchronized ( this.socketSession ) {

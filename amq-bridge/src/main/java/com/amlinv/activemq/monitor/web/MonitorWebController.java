@@ -3,6 +3,8 @@ package com.amlinv.activemq.monitor.web;
 import com.amlinv.activemq.monitor.activemq.ActiveMQBrokerPoller;
 import com.amlinv.activemq.monitor.jmx.connection.MBeanAccessConnectionFactory;
 import com.amlinv.activemq.monitor.jmx.polling.JmxActiveMQUtil;
+import com.amlinv.activemq.registry.DestinationRegistry;
+import com.amlinv.activemq.registry.model.DestinationInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,9 +23,10 @@ public class MonitorWebController {
     private static final Logger LOG = LoggerFactory.getLogger(MonitorWebController.class);
 
     private Set<String> monitoredBrokers;
-    private Set<String> queueNames;
-    private Set<String> topicNames;
     private Set<String> locations;
+
+    private DestinationRegistry queueRegistry;
+    private DestinationRegistry topicRegistry;
     private Map<String, ActiveMQBrokerPoller> brokerPollerMap;
     private AtomicBoolean started = new AtomicBoolean(false);
 
@@ -31,11 +34,17 @@ public class MonitorWebController {
 
     public MonitorWebController() {
         this.monitoredBrokers = new TreeSet<String>();
-        this.queueNames = new TreeSet<>();
-        this.topicNames = new TreeSet<>();
         this.locations = new TreeSet<>();
 
         this.brokerPollerMap = new TreeMap<>();
+    }
+
+    public DestinationRegistry getQueueRegistry() {
+        return queueRegistry;
+    }
+
+    public void setQueueRegistry(DestinationRegistry queueRegistry) {
+        this.queueRegistry = queueRegistry;
     }
 
     public MonitorWebsocketBrokerStatsFeed getWebsocketBrokerStatsFeed() {
@@ -80,10 +89,8 @@ public class MonitorWebController {
         ActiveMQBrokerPoller brokerPoller =
                 new ActiveMQBrokerPoller(brokerName, mBeanAccessConnectionFactory, this.websocketBrokerStatsFeed);
 
-        synchronized ( this.queueNames ) {
-            for ( String oneQueueName : this.queueNames ) {
-                brokerPoller.addMonitoredQueue(oneQueueName);
-            }
+        for ( String oneQueueName : this.queueRegistry.keys() ) {
+            brokerPoller.addMonitoredQueue(oneQueueName);
         }
 
         // TBD: one automic update for brokerPollerMap and locations (is there an echo in here?)
@@ -158,10 +165,11 @@ public class MonitorWebController {
             additionalQueueNames.add(queueName);
         }
 
-        synchronized ( this.queueNames ) {
-            this.queueNames.addAll(additionalQueueNames);
+        for ( String addQueueName : additionalQueueNames ) {
+            this.queueRegistry.putIfAbsent(addQueueName, new DestinationInfo(addQueueName));
         }
 
+        // TBD: change brokerPoller to listen to the DestinationRegistry for queues
         synchronized ( this.brokerPollerMap ) {
             for (ActiveMQBrokerPoller oneBrokerPoller : this.brokerPollerMap.values() ) {
                 for ( String oneQueueName : additionalQueueNames ) {
@@ -190,10 +198,11 @@ public class MonitorWebController {
             removeQueueNames.add(queueName);
         }
 
-        synchronized ( this.queueNames ) {
-            this.queueNames.removeAll(removeQueueNames);
+        for ( String rmQueueName : removeQueueNames ) {
+            this.queueRegistry.remove(rmQueueName);
         }
 
+        // TBD: change brokerPoller to listen to the DestinationRegistry for queues
         synchronized ( this.brokerPollerMap ) {
             for (ActiveMQBrokerPoller oneBrokerPoller : this.brokerPollerMap.values() ) {
                 for ( String oneQueueName : removeQueueNames ) {

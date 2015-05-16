@@ -11,6 +11,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Created by art on 5/2/15.
  */
+// TBD: convert to ConcurrentRegistry implementation
 public class DefaultBrokerRegistry implements BrokerRegistry {
     private final ConcurrentHashMap<String, BrokerInfo> registry = new ConcurrentHashMap<>();
 

@@ -42,6 +42,15 @@ public class ConcurrentRegistry<K, V> {
     }
 
     /**
+     * Setter for listeners for use with Spring; adds the listeners to the existing list, if any.
+     *
+     * @param newListeners listeners to add.
+     */
+    public void setListeners (List<RegistryListener<K, V>> newListeners) {
+        this.listeners.addAll(newListeners);
+    }
+
+    /**
      * Add the given listener to the list of listeners for this registry.  See also the notes on removeListener().
      * Note that adding the same listener more than once will result in that listener receiving duplicate notifications.
      *

@@ -4,6 +4,8 @@ import com.amlinv.activemq.monitor.activemq.ActiveMQBrokerPollerListener;
 import com.amlinv.activemq.monitor.model.ActiveMQBrokerStats;
 import com.amlinv.activemq.monitor.model.ActiveMQQueueStats;
 import com.amlinv.activemq.monitor.model.BrokerStatsPackage;
+import com.amlinv.activemq.registry.DestinationRegistryListener;
+import com.amlinv.activemq.registry.model.DestinationInfo;
 import com.amlinv.util.thread.DaemonThreadFactory;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -39,6 +41,8 @@ public class MonitorWebsocketBrokerStatsFeed implements ActiveMQBrokerPollerList
                     10, 10, 5, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(),
                     new DaemonThreadFactory("Monitor-Websocket-Dispatcher-Thread-"));
 
+    private DestinationRegistryListener myQueueRegistryListener = new MyQueueRegistryListener();
+
 
     public MonitorWebsocketRegistry getWebsocketRegistry() {
         return websocketRegistry;
@@ -54,6 +58,10 @@ public class MonitorWebsocketBrokerStatsFeed implements ActiveMQBrokerPollerList
 
     public void setExecutor(ThreadPoolExecutor executor) {
         this.executor = executor;
+    }
+
+    public DestinationRegistryListener getQueueRegistryListener() {
+        return myQueueRegistryListener;
     }
 
     @Override
@@ -81,12 +89,12 @@ public class MonitorWebsocketBrokerStatsFeed implements ActiveMQBrokerPollerList
         fireMonitorEvent("queueStats", queueStatsJson);
     }
 
-    protected void fireMonitorEvent (final String action, final String json) {
+    protected void fireMonitorEvent (final String action, final String content) {
         for ( final MonitorWebsocket oneTarget : this.websocketRegistry.values() ) {
             executor.execute(new Runnable() {
                 public void run() {
                     try {
-                        oneTarget.fireMonitorEvent(action, json);
+                        oneTarget.fireMonitorEvent(action, content);
                     } catch (Throwable exc) {
                         log.info("error attempting to send event to listener", exc);
                     }
@@ -127,4 +135,31 @@ public class MonitorWebsocketBrokerStatsFeed implements ActiveMQBrokerPollerList
         }
     }
 
+    /**
+     * Listener for events on the queue registry.
+     */
+    protected class MyQueueRegistryListener implements DestinationRegistryListener {
+        @Override
+        public void onPutEntry(String putKey, DestinationInfo putValue) {
+            fireMonitorEvent("queueAdded", putValue.getName());
+        }
+
+        @Override
+        public void onRemoveEntry(String removeKey, DestinationInfo removeValue) {
+            //
+            // Remove the statistics for the queue from all of the broker statistics.
+            //
+            synchronized ( queueStatsByBroker ) {
+                for ( Map<String, ActiveMQQueueStats> queueStatsForBroker : queueStatsByBroker.values() ) {
+                    queueStatsForBroker.remove(removeValue.getName());
+                }
+            }
+
+            fireMonitorEvent("queueRemoved", removeValue.getName());
+        }
+
+        @Override
+        public void onReplaceEntry(String replaceKey, DestinationInfo oldValue, DestinationInfo newValue) {
+        }
+    }
 }

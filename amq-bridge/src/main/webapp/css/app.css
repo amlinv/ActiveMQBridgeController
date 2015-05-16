@@ -17,7 +17,7 @@ html,body {
  padding-right: 1em;
 }
 
-input {
+input, .field {
   font-family: Courier New, monospace;
   background-color: purple;
   color: white;
