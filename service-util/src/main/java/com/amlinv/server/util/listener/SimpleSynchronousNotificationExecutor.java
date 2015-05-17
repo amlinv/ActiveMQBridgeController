@@ -33,7 +33,7 @@ public class SimpleSynchronousNotificationExecutor<K, V> implements Notification
      */
     public void fireRemoveNotification (Iterator<RegistryListener<K, V>> listeners, K removeKey, V removeValue) {
         while ( listeners.hasNext() ) {
-            listeners.next().onPutEntry(removeKey, removeValue);
+            listeners.next().onRemoveEntry(removeKey, removeValue);
         }
     }
 

@@ -16,7 +16,7 @@ import com.amlinv.activemq.nw_ctlr.NetworkEventListener;
 import com.amlinv.activemq.nw_ctlr.NetworkEventSource;
 import com.amlinv.activemq.nw_ctlr.event.AddConsumerEvent;
 import com.amlinv.activemq.nw_ctlr.event.RemoveConsumerEvent;
-import com.amlinv.activemq.registry.BrokerRegistry;
+import com.amlinv.activemq.registry.OldBrokerRegistry;
 import com.amlinv.activemq.registry.DestinationRegistry;
 import com.amlinv.activemq.registry.model.BrokerInfo;
 import org.slf4j.Logger;
@@ -40,19 +40,19 @@ public class RubyNetworkController implements NetworkController {
     private final List<NetworkEventSource> networkEventSources;
     private final MyNetworkEventListener myNetworkEventListener = new MyNetworkEventListener();
 
-    private final BrokerRegistry brokerRegistry;
+    private final OldBrokerRegistry oldBrokerRegistry;
     private final DestinationRegistry queueRegistry;
     private final DestinationRegistry topicRegistry;
 
     private boolean started = false;
 
     public RubyNetworkController(AmqBridgeController bridgeController, List<NetworkEventSource> sources,
-                                 BrokerRegistry initBrokerRegistry, DestinationRegistry initQueueRegistry,
+                                 OldBrokerRegistry initOldBrokerRegistry, DestinationRegistry initQueueRegistry,
                                  DestinationRegistry initTopicRegistry) {
 
         this.bridgeController = bridgeController;
         this.networkEventSources = new LinkedList<>(sources);
-        this.brokerRegistry = initBrokerRegistry;
+        this.oldBrokerRegistry = initOldBrokerRegistry;
         this.queueRegistry = initQueueRegistry;
         this.topicRegistry = initTopicRegistry;
     }
@@ -131,7 +131,7 @@ public class RubyNetworkController implements NetworkController {
     }
 
     protected void addBridgesForQueue(String consumerBrokerId, String queueName) {
-        BrokerInfo consumerBrokerInfo = this.brokerRegistry.lookupBrokerById(consumerBrokerId);
+        BrokerInfo consumerBrokerInfo = this.oldBrokerRegistry.lookupBrokerById(consumerBrokerId);
 
         if (consumerBrokerInfo == null) {
             this.log.warn("lost a race condition? missing source broker on adding bridges: src-broker-id={}; " +
@@ -139,14 +139,14 @@ public class RubyNetworkController implements NetworkController {
             return;
         }
 
-        for (String brokerId : this.brokerRegistry.getBrokerIds()) {
+        for (String brokerId : this.oldBrokerRegistry.getBrokerIds()) {
             if (brokerId.equals(consumerBrokerId)) {
                 log.debug("skipping bridge between source broker and itself: brokerId={}", brokerId);
             } else {
                 log.info("adding bridge for queue: source-broker-id={}; dest-broker-id={}; queue={}", consumerBrokerId,
                         brokerId, queueName);
 
-                BrokerInfo anotherBrokerInfo = this.brokerRegistry.lookupBrokerById(brokerId);
+                BrokerInfo anotherBrokerInfo = this.oldBrokerRegistry.lookupBrokerById(brokerId);
 
                 if (anotherBrokerInfo != null) {
                     String bridgeId = "auto-bridge-" + brokerId + "-to-" + consumerBrokerId;

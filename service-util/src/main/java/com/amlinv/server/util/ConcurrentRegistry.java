@@ -6,6 +6,7 @@ import com.amlinv.server.util.listener.SimpleSynchronousNotificationExecutor;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
@@ -178,5 +179,15 @@ public class ConcurrentRegistry<K, V> {
      */
     public Collection<V> values () {
         return Collections.unmodifiableCollection(this.store.values());
+    }
+
+    /**
+     * Return a read-only view of the content of the registry as a map.
+     *
+     * @return map view of the registry which is read-only while being backed by the registry so that changes to the
+     * registry will be reflected in the view.
+     */
+    public Map<K, V> asMap() {
+        return Collections.unmodifiableMap(this.store);
     }
 }

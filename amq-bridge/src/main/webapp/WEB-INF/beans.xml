@@ -33,21 +33,29 @@ http://cxf.apache.org/schemas/jaxrs.xsd">
         <!--<constructor-arg ref="appMainThreadPoolExecutor" />-->
     <!--</bean>-->
 
-    <bean id="brokerRegistry" class="com.amlinv.activemq.registry.impl.DefaultBrokerRegistry">
-        <constructor-arg>
-            <list>
-                <bean class="com.amlinv.activemq.registry.model.BrokerInfo">
-                    <constructor-arg value="SpiritedAway" />
-                    <constructor-arg value="SpiritedAway" />
-                    <constructor-arg value="failover://(tcp://localhost:61616)" />
-                </bean>
-                <bean class="com.amlinv.activemq.registry.model.BrokerInfo">
-                    <constructor-arg value="TopGun" />
-                    <constructor-arg value="TopGun" />
-                    <constructor-arg value="failover://(tcp://localhost:61617)" />
-                </bean>
+    <bean id="oldBrokerRegistry" class="com.amlinv.activemq.registry.impl.DefaultOldBrokerRegistry">
+        <!--<constructor-arg>-->
+            <!--<list>-->
+                <!--<bean class="com.amlinv.activemq.registry.model.BrokerInfo">-->
+                    <!--<constructor-arg value="SpiritedAway" />-->
+                    <!--<constructor-arg value="SpiritedAway" />-->
+                    <!--<constructor-arg value="failover://(tcp://localhost:61616)" />-->
+                <!--</bean>-->
+                <!--<bean class="com.amlinv.activemq.registry.model.BrokerInfo">-->
+                    <!--<constructor-arg value="TopGun" />-->
+                    <!--<constructor-arg value="TopGun" />-->
+                    <!--<constructor-arg value="failover://(tcp://localhost:61617)" />-->
+                <!--</bean>-->
+            <!--</list>-->
+        <!--</constructor-arg>-->
+    </bean>
+
+    <bean id="brokerRegistry" class="com.amlinv.activemq.registry.BrokerRegistry">
+        <property name="listeners">
+            <list value-type="com.amlinv.server.util.RegistryListener">
+                <value>#{monitorWebController.brokerRegistryListener}</value>
             </list>
-        </constructor-arg>
+        </property>
     </bean>
 
     <bean id="queueRegistry" class="com.amlinv.activemq.registry.DestinationRegistry">
@@ -83,15 +91,28 @@ http://cxf.apache.org/schemas/jaxrs.xsd">
         <constructor-arg ref="executionRegistry" />
     </bean>
 
-
-    <bean id="monitorWebController" class="com.amlinv.activemq.monitor.web.MonitorWebController">
-        <property name="websocketBrokerStatsFeed" ref="websocketBrokerStatsFeed" />
+    <!-- PERSISTENCE -->
+    <bean id="monitorPersistence" class="com.amlinv.activemq.persistence.impl.JsonFileApplicationPersistenceAdapter"
+          init-method="loadOnInit" destroy-method="saveOnDestory">
+        <constructor-arg value="${data.dir:.}/${monitor.persistence.file:monitor.json}" />
+        <property name="brokerRegistry" ref="brokerRegistry" />
         <property name="queueRegistry" ref="queueRegistry" />
     </bean>
+
+
+    <bean id="monitorWebController" class="com.amlinv.activemq.monitor.web.MonitorWebController" init-method="init">
+        <property name="websocketBrokerStatsFeed" ref="websocketBrokerStatsFeed" />
+        <property name="brokerRegistry" ref="brokerRegistry" />
+        <property name="queueRegistry" ref="queueRegistry" />
+    </bean>
+
     <bean id="bridgeWebController" class="com.amlinv.activemq.bridge.web.BridgeWebController">
         <constructor-arg ref="amqBridgeController"/>
     </bean>
 
+    <!--                    -->
+    <!-- WEB SERVICES BEANS -->
+    <!--                    -->
     <jaxrs:server id="services" address="/">
         <jaxrs:serviceBeans>
 

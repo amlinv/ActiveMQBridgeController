@@ -1,6 +1,6 @@
 package com.amlinv.activemq.registry.impl;
 
-import com.amlinv.activemq.registry.BrokerRegistry;
+import com.amlinv.activemq.registry.OldBrokerRegistry;
 import com.amlinv.activemq.registry.model.BrokerInfo;
 
 import java.util.HashSet;
@@ -12,13 +12,14 @@ import java.util.concurrent.ConcurrentHashMap;
  * Created by art on 5/2/15.
  */
 // TBD: convert to ConcurrentRegistry implementation
-public class DefaultBrokerRegistry implements BrokerRegistry {
+@Deprecated
+public class DefaultOldBrokerRegistry implements OldBrokerRegistry {
     private final ConcurrentHashMap<String, BrokerInfo> registry = new ConcurrentHashMap<>();
 
-    public DefaultBrokerRegistry() {
+    public DefaultOldBrokerRegistry() {
     }
 
-    public DefaultBrokerRegistry(List<BrokerInfo> initBrokerList) {
+    public DefaultOldBrokerRegistry(List<BrokerInfo> initBrokerList) {
         for ( BrokerInfo oneBrokerInfo : initBrokerList ) {
             this.registry.put(oneBrokerInfo.getBrokerId(), oneBrokerInfo);
         }
