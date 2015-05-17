@@ -1,14 +1,11 @@
 package com.amlinv.activemq.monitor.activemq;
 
-import com.amlinv.activemq.monitor.jmx.connection.JMXConnectionSource;
 import com.amlinv.activemq.monitor.jmx.connection.MBeanAccessConnectionFactory;
 import com.amlinv.activemq.monitor.jmx.polling.JmxAttributePoller;
 import com.amlinv.activemq.monitor.model.ActiveMQBrokerStats;
 import com.amlinv.activemq.monitor.model.ActiveMQQueueStats;
 import com.amlinv.activemq.monitor.model.BrokerStatsPackage;
-import com.amlinv.activemq.monitor.web.MonitorWebsocket;
 import com.amlinv.logging.RepeatLogMessageSuppressor;
-import com.google.gson.Gson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,6 +18,8 @@ import java.util.*;
  */
 public class ActiveMQBrokerPoller {
     private static final Logger LOG = LoggerFactory.getLogger(ActiveMQBrokerPoller.class);
+
+    private Logger STATS_LOG = LoggerFactory.getLogger("com.amlinv.activemq.monitor.activemq.statsLog");
 
     private final String brokerName;
 
@@ -218,7 +217,88 @@ public class ActiveMQBrokerPoller {
 
     protected void onPollComplete (MyJmxAttributePoller poller) {
         BrokerStatsPackage resultStorage = poller.getResultStorage();
+
         this.listener.onBrokerPollComplete(resultStorage);
+
+        this.logStats(resultStorage);
+    }
+
+    protected void logStats (BrokerStatsPackage resultStorage) {
+        ActiveMQBrokerStats brokerStats = resultStorage.getBrokerStats();
+        if ( brokerStats != null ) {
+            String line = formatBrokerStatsLogLine(brokerStats);
+
+            this.STATS_LOG.info("{}", line.toString());
+        }
+
+        if ( resultStorage.getQueueStats() != null ) {
+            for (Map.Entry<String, ActiveMQQueueStats> oneEntry : resultStorage.getQueueStats().entrySet()) {
+                String line = formatQueueStatsLogLine(oneEntry.getKey(), oneEntry.getValue());
+
+                this.STATS_LOG.info("{}", line.toString());
+            }
+        }
+    }
+
+    protected String formatBrokerStatsLogLine(ActiveMQBrokerStats brokerStats) {
+        StringBuilder buffer = new StringBuilder();
+
+        buffer.append("|broker-stats|");
+        buffer.append(encodeLogStatString(brokerStats.getBrokerName()));
+        buffer.append("|");
+        buffer.append(brokerStats.getAverageMessageSize());
+        buffer.append("|");
+        buffer.append(encodeLogStatString(brokerStats.getUptime()));
+        buffer.append("|");
+        buffer.append(brokerStats.getUptimeMillis());
+        buffer.append("|");
+        buffer.append(brokerStats.getMemoryLimit());
+        buffer.append("|");
+        buffer.append(brokerStats.getMemoryPercentUsage());
+        buffer.append("|");
+        buffer.append(brokerStats.getCurrentConnectionsCount());
+        buffer.append("|");
+        buffer.append(brokerStats.getTotalConsumerCount());
+        buffer.append("|");
+        buffer.append(brokerStats.getTotalMessageCount());
+        buffer.append("|");
+        buffer.append(brokerStats.getTotalEnqueueCount());
+        buffer.append("|");
+        buffer.append(brokerStats.getTotalDequeueCount());
+        buffer.append("|");
+
+        return buffer.toString();
+    }
+
+    private String formatQueueStatsLogLine(String queueName, ActiveMQQueueStats stats) {
+        StringBuilder buffer = new StringBuilder();
+
+        buffer.append("|queue-stats|");
+        buffer.append(encodeLogStatString(queueName));
+        buffer.append("|");
+        buffer.append(encodeLogStatString(stats.getBrokerName()));
+        buffer.append("|");
+        buffer.append(stats.getQueueSize());
+        buffer.append("|");
+        buffer.append(stats.getEnqueueCount());
+        buffer.append("|");
+        buffer.append(stats.getDequeueCount());
+        buffer.append("|");
+        buffer.append(stats.getNumConsumers());
+        buffer.append("|");
+        buffer.append(stats.getNumProducers());
+        buffer.append("|");
+        buffer.append(stats.getCursorPercentUsage());
+        buffer.append("|");
+        buffer.append(stats.getMemoryPercentUsage());
+        buffer.append("|");
+        buffer.append(stats.getInflightCount());
+
+        return buffer.toString();
+    }
+
+    protected String encodeLogStatString (String orig) {
+        return  orig.replaceAll("[|]", "%v%");
     }
 
     protected class PollerTask extends TimerTask {
