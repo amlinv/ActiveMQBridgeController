@@ -12,7 +12,7 @@
 
         <RollingFile name="stats"
                      fileName="${sys:data.dir}/stats/stats.log"
-                     filePattern="${sys:data.dir}/stats/{yyyy-MM-dd}/stats-%d{yyyy-MM-dd_HH}.log.gz">
+                     filePattern="${sys:data.dir}/stats/%d{yyyy-MM-dd}/stats-%d{yyyy-MM-dd_HH}.log.gz">
             <PatternLayout>
                 <pattern>%d{ISO8601} %m%n</pattern>
             </PatternLayout>
