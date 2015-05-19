@@ -194,6 +194,7 @@
         <th>Broker</th>
         <th>Up Time</th>
         <th>Memory % Usage</th>
+        <th>Store % Usage</th>
         <th>Average Message Size</th>
         <th>Connections</th>
         <th>Total Messages</th>
@@ -213,6 +214,11 @@
         <td>
           <div class="field">
             {{monitoredBroker.brokerStats.memoryPercentUsage}}
+          </div>
+        </td>
+        <td>
+          <div class="field">
+            {{monitoredBroker.brokerStats.storePercentUsage}}
           </div>
         </td>
         <td>

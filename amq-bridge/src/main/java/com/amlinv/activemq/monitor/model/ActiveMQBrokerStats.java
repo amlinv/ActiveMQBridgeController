@@ -15,6 +15,7 @@ public class ActiveMQBrokerStats implements MBeanLocationParameterSource {
     private long uptimeMillis;
     private long memoryLimit;
     private long memoryPercentUsage;
+    private long storePercentUsage;
     private long currentConnectionsCount;
     private long totalConsumerCount;
     private long totalMessageCount;
@@ -76,6 +77,15 @@ public class ActiveMQBrokerStats implements MBeanLocationParameterSource {
 
     public long getCurrentConnectionsCount() {
         return currentConnectionsCount;
+    }
+
+    public long getStorePercentUsage() {
+        return storePercentUsage;
+    }
+
+    @MBeanAttribute(name = "StorePercentUsage", type = int.class)
+    public void setStorePercentUsage(long storePercentUsage) {
+        this.storePercentUsage = storePercentUsage;
     }
 
     @MBeanAttribute(name = "CurrentConnectionsCount", type = long.class)

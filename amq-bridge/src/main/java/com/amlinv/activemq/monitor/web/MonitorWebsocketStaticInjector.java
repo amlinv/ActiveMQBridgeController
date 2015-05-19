@@ -13,4 +13,12 @@ public class MonitorWebsocketStaticInjector {
     public void setRegistry(MonitorWebsocketRegistry registry) {
         MonitorWebsocket.setRegistry(registry);
     }
+
+    public long getSendTimeout () {
+        return MonitorWebsocket.getSendTimeout();
+    }
+
+    public void setSendTimeout (long newTimeout) {
+        MonitorWebsocket.setSendTimeout(newTimeout);
+    }
 }

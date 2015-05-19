@@ -26,7 +26,7 @@
 
     <servlet-mapping>
         <servlet-name>default</servlet-name>
-        <url-pattern>/*</url-pattern>
+        <url-pattern>/</url-pattern>
     </servlet-mapping>
 
 	<servlet>
@@ -57,4 +57,8 @@
         <servlet-name>CodahaleMetrics</servlet-name>
         <url-pattern>/metrics</url-pattern>
     </servlet-mapping>
+
+    <welcome-file-list>
+        <welcome-file>index.html</welcome-file>
+    </welcome-file-list>
 </web-app>

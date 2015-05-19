@@ -12,11 +12,9 @@ import com.google.gson.GsonBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.websocket.Session;
-import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -43,6 +41,11 @@ public class MonitorWebsocketBrokerStatsFeed implements ActiveMQBrokerPollerList
 
     private DestinationRegistryListener myQueueRegistryListener = new MyQueueRegistryListener();
 
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //
+    // METHODS
+    //
+    //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     public MonitorWebsocketRegistry getWebsocketRegistry() {
         return websocketRegistry;
@@ -71,9 +74,7 @@ public class MonitorWebsocketBrokerStatsFeed implements ActiveMQBrokerPollerList
 
     protected void onBrokerStatsUpdate (BrokerStatsPackage brokerStatsPackage) {
         ActiveMQBrokerStats brokerStats = brokerStatsPackage.getBrokerStats();
-        Map<String, ActiveMQQueueStats> queueStats =
-                Collections.unmodifiableMap(
-                        new TreeMap<String, ActiveMQQueueStats>(brokerStatsPackage.getQueueStats()));
+        Map<String, ActiveMQQueueStats> queueStats = new ConcurrentHashMap<>(brokerStatsPackage.getQueueStats());
 
         synchronized ( queueStatsByBroker ) {
             queueStatsByBroker.put(brokerStats.getBrokerName(), queueStats);
@@ -101,8 +102,6 @@ public class MonitorWebsocketBrokerStatsFeed implements ActiveMQBrokerPollerList
                 }
             });
         }
-        final List<Session> listeners;
-
     }
 
     protected void aggregateQueueStats () {

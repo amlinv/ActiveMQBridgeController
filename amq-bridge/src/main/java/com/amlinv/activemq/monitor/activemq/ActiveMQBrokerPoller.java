@@ -19,6 +19,8 @@ import java.util.*;
 public class ActiveMQBrokerPoller {
     private static final Logger LOG = LoggerFactory.getLogger(ActiveMQBrokerPoller.class);
 
+    public static final long DEFAULT_MIN_TIME_BETWEEN_STATS_LOG = 60000L;
+
     private Logger STATS_LOG = LoggerFactory.getLogger("com.amlinv.activemq.monitor.activemq.statsLog");
 
     private final String brokerName;
@@ -29,6 +31,9 @@ public class ActiveMQBrokerPoller {
     private Set<String> topicNames = new TreeSet<>();
 
     private long pollingInterval = 3000;
+    private long minTimeBetweenStatsLog = DEFAULT_MIN_TIME_BETWEEN_STATS_LOG;
+    private long lastStatsLogUpdateTimestamp = 0;
+    private final Object statsLogSync = new Object();
 
     private final MBeanAccessConnectionFactory mBeanAccessConnectionFactory;
     private final ActiveMQBrokerPollerListener listener;
@@ -220,6 +225,28 @@ public class ActiveMQBrokerPoller {
 
         this.listener.onBrokerPollComplete(resultStorage);
 
+        this.logStatsWithRateLimit(resultStorage);
+    }
+
+    protected void logStatsWithRateLimit (BrokerStatsPackage resultStorage) {
+        long nowMs = System.nanoTime() / 1000000L;
+
+        synchronized ( this.statsLogSync ) {
+            //
+            // If enough time has not passed, skip the update.
+            //
+            if ( ( nowMs - this.lastStatsLogUpdateTimestamp ) < this.minTimeBetweenStatsLog ) {
+                LOG.debug("skipping stats log; now={}; last-update={}; limit={}", nowMs,
+                        this.lastStatsLogUpdateTimestamp, this.minTimeBetweenStatsLog);
+                return;
+            }
+
+            this.lastStatsLogUpdateTimestamp = nowMs;
+        }
+
+        //
+        // Write the upate now.
+        //
         this.logStats(resultStorage);
     }
 
@@ -265,6 +292,8 @@ public class ActiveMQBrokerPoller {
         buffer.append(brokerStats.getTotalEnqueueCount());
         buffer.append("|");
         buffer.append(brokerStats.getTotalDequeueCount());
+        buffer.append("|");
+        buffer.append(brokerStats.getStorePercentUsage());
         buffer.append("|");
 
         return buffer.toString();
