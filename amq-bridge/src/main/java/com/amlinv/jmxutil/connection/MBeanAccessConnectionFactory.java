@@ -1,4 +1,4 @@
-package com.amlinv.activemq.monitor.jmx.connection;
+package com.amlinv.jmxutil.connection;
 
 import java.io.IOException;
 

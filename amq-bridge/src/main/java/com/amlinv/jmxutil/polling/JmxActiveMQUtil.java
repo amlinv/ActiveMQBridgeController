@@ -1,11 +1,12 @@
-package com.amlinv.activemq.monitor.jmx.polling;
+package com.amlinv.jmxutil.polling;
 
-import com.amlinv.activemq.monitor.jmx.connection.MBeanAccessConnection;
-import com.amlinv.activemq.monitor.jmx.connection.MBeanAccessConnectionFactory;
-import com.amlinv.activemq.monitor.jmx.connection.impl.JMXJvmIdConnectionFactory;
-import com.amlinv.activemq.monitor.jmx.connection.impl.JMXRemoteUrlConnectionFactory;
-import com.amlinv.activemq.monitor.jmx.connection.impl.JolokiaConnectionFactory;
+import com.amlinv.jmxutil.connection.MBeanAccessConnection;
+import com.amlinv.jmxutil.connection.MBeanAccessConnectionFactory;
+import com.amlinv.jmxutil.connection.impl.JMXJvmIdConnectionFactory;
+import com.amlinv.jmxutil.connection.impl.JMXRemoteUrlConnectionFactory;
+import com.amlinv.jmxutil.connection.impl.JolokiaConnectionFactory;
 
+import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
 import java.util.Set;
 
@@ -16,10 +17,13 @@ public class JmxActiveMQUtil {
     public static final String JMX_URL_PREFIX = "service:jmx:rmi:///jndi/rmi://";
     public static final String JMX_URL_SUFFIX = "/jmxrmi";
     public static final String AMQ_BROKER_QUERY = "org.apache.activemq:type=Broker,brokerName=*";
+    public static final String AMQ_BROKER_DESTINATION_QUERY =
+            "org.apache.activemq:type=Broker,brokerName=%s,destinationType=%s,destinationName=%s";
     public static final String AMQ_BROKER_QUEUE_QUERY =
             "org.apache.activemq:type=Broker,brokerName=%s,destinationType=Queue,destinationName=%s";
 
     public static final String AMQ_BROKER_NAME_KEY = "brokerName";
+    public static final String AMQ_DEST_NAME_KEY = "destinationName";
     public static final String AMQ_QUEUE_NAME_KEY = "destinationName";
 
     public static String    formatJmxUrl (String hostname, int port) {
@@ -102,6 +106,18 @@ public class JmxActiveMQUtil {
         }
 
         return  names;
+    }
+
+    public static ObjectName getDestinationObjectName(String brokerName, String destinationName, String destinationType)
+            throws MalformedObjectNameException {
+
+        String name = String.format(AMQ_BROKER_DESTINATION_QUERY, brokerName, destinationType, destinationName);
+
+        return new ObjectName(name);
+    }
+
+    public static String extractDestinationName (ObjectName mbeanName) {
+        return mbeanName.getKeyProperty(AMQ_DEST_NAME_KEY);
     }
 
     protected static Set<ObjectName> execLocationQuery (String location, ObjectName pattern) throws Exception {

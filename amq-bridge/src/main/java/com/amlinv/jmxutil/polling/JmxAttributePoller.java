@@ -1,9 +1,9 @@
-package com.amlinv.activemq.monitor.jmx.polling;
+package com.amlinv.jmxutil.polling;
 
-import com.amlinv.activemq.monitor.jmx.annotation.MBeanAnnotationUtil;
-import com.amlinv.activemq.monitor.jmx.connection.MBeanAccessConnection;
-import com.amlinv.activemq.monitor.jmx.connection.MBeanAccessConnectionFactory;
-import com.amlinv.activemq.monitor.jmx.connection.impl.MBeanBatchCapableAccessConnection;
+import com.amlinv.jmxutil.annotation.MBeanAnnotationUtil;
+import com.amlinv.jmxutil.connection.MBeanAccessConnection;
+import com.amlinv.jmxutil.connection.MBeanAccessConnectionFactory;
+import com.amlinv.jmxutil.connection.impl.MBeanBatchCapableAccessConnection;
 import com.amlinv.activemq.monitor.model.MBeanLocationParameterSource;
 import com.amlinv.logging.RepeatLogMessageSuppressor;
 import org.slf4j.Logger;
@@ -115,7 +115,7 @@ public class JmxAttributePoller {
         }
     }
 
-    protected boolean pollIndividually() {
+    protected boolean pollIndividually() throws IOException {
         List<Future<Void>> calls = new LinkedList<>();
         for ( final Object onePolledObject : this.polledObjects ) {
             // Stop as soon as possible if shutting down.
@@ -142,6 +142,11 @@ public class JmxAttributePoller {
                 log.info("interrupted while polling object");
             } catch (ExecutionException execExc) {
                 log.warn("failed to poll object", execExc);
+
+                // Propagate IOExceptions since they most likely mean that we need to recover the connection.
+                if ( execExc.getCause() instanceof IOException ) {
+                    throw (IOException) execExc.getCause();
+                }
             }
         }
         return false;

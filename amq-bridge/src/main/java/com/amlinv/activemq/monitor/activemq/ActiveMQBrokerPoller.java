@@ -1,7 +1,10 @@
 package com.amlinv.activemq.monitor.activemq;
 
-import com.amlinv.activemq.monitor.jmx.connection.MBeanAccessConnectionFactory;
-import com.amlinv.activemq.monitor.jmx.polling.JmxAttributePoller;
+import com.amlinv.activemq.registry.DestinationRegistry;
+import com.amlinv.activemq.registry.DestinationRegistryListener;
+import com.amlinv.activemq.registry.model.DestinationInfo;
+import com.amlinv.jmxutil.connection.MBeanAccessConnectionFactory;
+import com.amlinv.jmxutil.polling.JmxAttributePoller;
 import com.amlinv.activemq.monitor.model.ActiveMQBrokerStats;
 import com.amlinv.activemq.monitor.model.ActiveMQQueueStats;
 import com.amlinv.activemq.monitor.model.BrokerStatsPackage;
@@ -27,8 +30,11 @@ public class ActiveMQBrokerPoller {
 
     private Timer scheduler = new Timer();
 
-    private Set<String> queueNames = new TreeSet<>();
-    private Set<String> topicNames = new TreeSet<>();
+    private DestinationRegistry queueRegistry;
+    private DestinationRegistry topicRegistry;
+
+    private MyQueueRegistryListener queueRegistryListener = new MyQueueRegistryListener();
+
 
     private long pollingInterval = 3000;
     private long minTimeBetweenStatsLog = DEFAULT_MIN_TIME_BETWEEN_STATS_LOG;
@@ -53,12 +59,26 @@ public class ActiveMQBrokerPoller {
         this.listener = listener;
     }
 
-    public void addMonitoredQueue (String name) {
+    public DestinationRegistry getQueueRegistry() {
+        return queueRegistry;
+    }
+
+    public void setQueueRegistry(DestinationRegistry queueRegistry) {
+        this.queueRegistry = queueRegistry;
+    }
+
+    public DestinationRegistry getTopicRegistry() {
+        return topicRegistry;
+    }
+
+    public void setTopicRegistry(DestinationRegistry topicRegistry) {
+        this.topicRegistry = topicRegistry;
+    }
+
+    protected void addMonitoredQueue (String name) {
         MyJmxAttributePoller newPoller = null;
 
         synchronized ( this ) {
-            this.queueNames.add(name);
-
             if ( this.started ) {
                 newPoller = this.prepareNewPoller();
             }
@@ -69,12 +89,10 @@ public class ActiveMQBrokerPoller {
         }
     }
 
-    public void removeMonitoredQueue (String name) {
+    protected void removeMonitoredQueue (String name) {
         MyJmxAttributePoller newPoller = null;
 
         synchronized ( this ) {
-            this.queueNames.remove(name);
-
             if ( this.started ) {
                 newPoller = this.prepareNewPoller();
             }
@@ -85,12 +103,10 @@ public class ActiveMQBrokerPoller {
         }
     }
 
-    public void addMonitoredTopic (String name) {
+    protected void addMonitoredTopic (String name) {
         MyJmxAttributePoller newPoller = null;
 
         synchronized ( this ) {
-            this.topicNames.add(name);
-
             if ( this.started ) {
                 newPoller = this.prepareNewPoller();
             }
@@ -101,12 +117,10 @@ public class ActiveMQBrokerPoller {
         }
     }
 
-    public void removeMonitoredTopic (String name) {
+    protected void removeMonitoredTopic (String name) {
         MyJmxAttributePoller newPoller = null;
 
         synchronized ( this ) {
-            this.topicNames.remove(name);
-
             if ( this.started ) {
                 newPoller = this.prepareNewPoller();
             }
@@ -124,6 +138,8 @@ public class ActiveMQBrokerPoller {
             }
 
             this.started = true;
+
+            this.queueRegistry.addListener(this.queueRegistryListener);
             this.poller = this.prepareNewPoller();
         }
 
@@ -133,6 +149,8 @@ public class ActiveMQBrokerPoller {
 
     public void stop () {
         this.scheduler.cancel();
+
+        this.queueRegistry.removeListener(this.queueRegistryListener);
 
         this.stopped = true;
 
@@ -168,7 +186,7 @@ public class ActiveMQBrokerPoller {
     protected BrokerStatsPackage preparePolledResultStorage () {
         Map<String, ActiveMQQueueStats> queueStatsMap = new TreeMap<>();
 
-        for ( String oneQueueName : queueNames ) {
+        for ( String oneQueueName : queueRegistry.keys() ) {
             ActiveMQQueueStats queueStats = new ActiveMQQueueStats(this.brokerName, oneQueueName);
 
             queueStatsMap.put(oneQueueName, queueStats);
@@ -348,6 +366,26 @@ public class ActiveMQBrokerPoller {
 
         public BrokerStatsPackage getResultStorage() {
             return resultStorage;
+        }
+    }
+
+
+    /**
+     *
+     */
+    protected class MyQueueRegistryListener implements DestinationRegistryListener {
+        @Override
+        public void onPutEntry(String putKey, DestinationInfo putValue) {
+            addMonitoredQueue(putValue.getName());
+        }
+
+        @Override
+        public void onRemoveEntry(String removeKey, DestinationInfo removeValue) {
+            removeMonitoredQueue(removeValue.getName());
+        }
+
+        @Override
+        public void onReplaceEntry(String replaceKey, DestinationInfo oldValue, DestinationInfo newValue) {
         }
     }
 }

@@ -1,18 +1,22 @@
 package com.amlinv.activemq.monitor.web;
 
+import com.amlinv.activemq.discovery.MBeanDestinationDiscoverer;
+import com.amlinv.activemq.discovery.MBeanDestinationDiscovererScheduler;
 import com.amlinv.activemq.monitor.activemq.ActiveMQBrokerPoller;
-import com.amlinv.activemq.monitor.jmx.connection.MBeanAccessConnectionFactory;
-import com.amlinv.activemq.monitor.jmx.polling.JmxActiveMQUtil;
+import com.amlinv.jmxutil.connection.MBeanAccessConnectionFactory;
+import com.amlinv.jmxutil.polling.JmxActiveMQUtil;
 import com.amlinv.activemq.registry.BrokerRegistry;
 import com.amlinv.activemq.registry.BrokerRegistryListener;
 import com.amlinv.activemq.registry.DestinationRegistry;
 import com.amlinv.activemq.registry.model.BrokerInfo;
 import com.amlinv.activemq.registry.model.DestinationInfo;
-import com.amlinv.server.util.RegistryListener;
+import com.amlinv.util.thread.DaemonThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.ws.rs.*;
@@ -33,8 +37,14 @@ public class MonitorWebController {
     private DestinationRegistry topicRegistry;
 
     private Map<String, ActiveMQBrokerPoller> brokerPollerMap;
+    private Map<String, MBeanDestinationDiscovererScheduler> queueDiscoverers;
     private AtomicBoolean started = new AtomicBoolean(false);
+
     private boolean autoStart = true;
+    private boolean autoDiscoverQueues = true;
+
+    private ScheduledExecutorService discovererExecutorService =
+            new ScheduledThreadPoolExecutor(5, new DaemonThreadFactory("discoverer-polling-thread-"));
 
     private MonitorWebsocketBrokerStatsFeed websocketBrokerStatsFeed;
 
@@ -42,6 +52,7 @@ public class MonitorWebController {
         this.myBrokerRegistryListener = new MyBrokerRegistryListener();
 
         this.brokerPollerMap = new TreeMap<>();
+        this.queueDiscoverers = new HashMap<>();
     }
 
     public BrokerRegistry getBrokerRegistry() {
@@ -80,11 +91,28 @@ public class MonitorWebController {
         this.autoStart = autoStart;
     }
 
+    public boolean isAutoDiscoverQueues() {
+        return autoDiscoverQueues;
+    }
+
+    public void setAutoDiscoverQueues(boolean autoDiscoverQueues) {
+        this.autoDiscoverQueues = autoDiscoverQueues;
+    }
+
     public void init () {
         LOG.info("Initializing monitor web controller");
         if ( this.autoStart ) {
             LOG.info("Starting monitoring now");
             this.startMonitoring();
+        }
+    }
+
+    // TBD: make sure nothing new gets added during shutdown
+    public void shutdown () {
+        synchronized ( this.queueDiscoverers ) {
+            for (MBeanDestinationDiscovererScheduler oneDiscovererScheduler : this.queueDiscoverers.values()) {
+                oneDiscovererScheduler.stop();
+            }
         }
     }
 
@@ -155,17 +183,8 @@ public class MonitorWebController {
             additionalQueueNames.add(queueName);
         }
 
-        for ( String addQueueName : additionalQueueNames ) {
-            this.queueRegistry.putIfAbsent(addQueueName, new DestinationInfo(addQueueName));
-        }
-
-        // TBD: change brokerPoller to listen to the DestinationRegistry for queues
-        synchronized ( this.brokerPollerMap ) {
-            for (ActiveMQBrokerPoller oneBrokerPoller : this.brokerPollerMap.values() ) {
-                for ( String oneQueueName : additionalQueueNames ) {
-                    oneBrokerPoller.addMonitoredQueue(oneQueueName);
-                }
-            }
+        for ( String oneAdditionalQueueName : additionalQueueNames ) {
+            performQueueAdd(oneAdditionalQueueName);
         }
 
         Response response = Response.ok(additionalQueueNames).build();
@@ -190,15 +209,6 @@ public class MonitorWebController {
 
         for ( String rmQueueName : removeQueueNames ) {
             this.queueRegistry.remove(rmQueueName);
-        }
-
-        // TBD: change brokerPoller to listen to the DestinationRegistry for queues
-        synchronized ( this.brokerPollerMap ) {
-            for (ActiveMQBrokerPoller oneBrokerPoller : this.brokerPollerMap.values() ) {
-                for ( String oneQueueName : removeQueueNames ) {
-                    oneBrokerPoller.removeMonitoredQueue(oneQueueName);
-                }
-            }
         }
 
         Response response = Response.ok(removeQueueNames).build();
@@ -245,6 +255,10 @@ public class MonitorWebController {
         return result;
     }
 
+    protected void performQueueAdd(String queueName) {
+        this.queueRegistry.putIfAbsent(queueName, new DestinationInfo(queueName));
+    }
+
     /**
      * Prepare polling for the named broker at the given polling address.
      *
@@ -273,9 +287,8 @@ public class MonitorWebController {
         ActiveMQBrokerPoller brokerPoller =
                 new ActiveMQBrokerPoller(brokerName, mBeanAccessConnectionFactory, this.websocketBrokerStatsFeed);
 
-        for ( String oneQueueName : this.queueRegistry.keys() ) {
-            brokerPoller.addMonitoredQueue(oneQueueName);
-        }
+        brokerPoller.setQueueRegistry(this.queueRegistry);
+        brokerPoller.setTopicRegistry(this.topicRegistry);
 
         // TBD: one automic update for brokerPollerMap and locations (is there an echo in here?)
         synchronized ( this.brokerPollerMap ) {
@@ -293,7 +306,32 @@ public class MonitorWebController {
             brokerPoller.start();
         }
 
+        // Add auto-discovery of Queues for this broker, if enabled
+        if ( this.autoDiscoverQueues ) {
+            this.prepareBrokerQueueDiscoverer(brokerName, address, mBeanAccessConnectionFactory);
+        }
+
         return address + " = " + brokerName;
+    }
+
+    protected void prepareBrokerQueueDiscoverer (String brokerName, String address,
+                                                 MBeanAccessConnectionFactory connectionFactory) {
+
+        MBeanDestinationDiscoverer discoverer = new MBeanDestinationDiscoverer("Queue");
+        discoverer.setmBeanAccessConnectionFactory(connectionFactory);
+        discoverer.setBrokerName(brokerName);
+        discoverer.setRegistry(this.queueRegistry);
+
+        MBeanDestinationDiscovererScheduler scheduler = new MBeanDestinationDiscovererScheduler();
+
+        scheduler.setExecutor(this.discovererExecutorService);
+        scheduler.setDiscoverer(discoverer);
+
+        scheduler.start();
+
+        synchronized ( this.queueDiscoverers ) {
+            this.queueDiscoverers.put(address, scheduler);
+        }
     }
 
     // TBD: don't create mutliple JMX connections when performing multiple queries (JMX connector pool?)
@@ -321,7 +359,16 @@ public class MonitorWebController {
         return  result;
     }
 
+    /**
+     * Listener for events representing a change in the list of monitored brokers.
+     */
     protected class MyBrokerRegistryListener implements BrokerRegistryListener {
+        /**
+         * New broker was added to the registry; prepare polling of the broker.
+         *
+         * @param putKey key of the entry that was added to the registry.
+         * @param putValue value of the entry that was added to the registry.
+         */
         @Override
         public void onPutEntry(String putKey, BrokerInfo putValue) {
             try {
@@ -332,11 +379,24 @@ public class MonitorWebController {
             }
         }
 
+        /**
+         * An existing broker was removed from the registry; stop polling the broker.
+         *
+         * @param removeKey key of the entry that was removed.
+         * @param removeValue value of the entry that was removed.
+         */
         @Override
         public void onRemoveEntry(String removeKey, BrokerInfo removeValue) {
             performBrokerRemoval(removeKey);
         }
 
+        /**
+         * An existing broker was modified in the registry; nothing to do here.
+         *
+         * @param replaceKey
+         * @param oldValue
+         * @param newValue
+         */
         @Override
         public void onReplaceEntry(String replaceKey, BrokerInfo oldValue, BrokerInfo newValue) {
         }

@@ -1,4 +1,4 @@
-package com.amlinv.activemq.monitor.jmx.connection;
+package com.amlinv.jmxutil.connection;
 
 import javax.management.Attribute;
 import javax.management.InstanceNotFoundException;
@@ -8,7 +8,6 @@ import javax.management.QueryExp;
 import javax.management.ReflectionException;
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 /**

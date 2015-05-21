@@ -1,7 +1,7 @@
-package com.amlinv.activemq.monitor.jmx.connection.impl;
+package com.amlinv.jmxutil.connection.impl;
 
-import com.amlinv.activemq.monitor.jmx.connection.MBeanAccessConnection;
-import com.amlinv.activemq.monitor.jmx.connection.MBeanAccessConnectionFactory;
+import com.amlinv.jmxutil.connection.MBeanAccessConnection;
+import com.amlinv.jmxutil.connection.MBeanAccessConnectionFactory;
 import org.jolokia.client.J4pClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

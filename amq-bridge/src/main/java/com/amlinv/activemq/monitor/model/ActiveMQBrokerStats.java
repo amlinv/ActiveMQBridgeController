@@ -1,7 +1,7 @@
 package com.amlinv.activemq.monitor.model;
 
-import com.amlinv.activemq.monitor.jmx.annotation.MBeanAttribute;
-import com.amlinv.activemq.monitor.jmx.annotation.MBeanLocation;
+import com.amlinv.jmxutil.annotation.MBeanAttribute;
+import com.amlinv.jmxutil.annotation.MBeanLocation;
 
 /**
  * Created by art on 3/31/15.

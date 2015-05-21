@@ -1,9 +1,6 @@
-package com.amlinv.activemq.monitor.jmx.annotation;
+package com.amlinv.jmxutil.annotation;
 
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 

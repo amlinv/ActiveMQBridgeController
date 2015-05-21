@@ -1,17 +1,14 @@
-package com.amlinv.activemq.monitor.jmx.connection.impl;
+package com.amlinv.jmxutil.connection.impl;
 
-import com.amlinv.activemq.monitor.jmx.connection.MBeanAccessConnection;
+import com.amlinv.jmxutil.connection.MBeanAccessConnection;
 
 import javax.management.Attribute;
-import javax.management.InstanceNotFoundException;
 import javax.management.MalformedObjectNameException;
 import javax.management.ObjectName;
-import javax.management.QueryExp;
 import javax.management.ReflectionException;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Created by art on 5/7/15.

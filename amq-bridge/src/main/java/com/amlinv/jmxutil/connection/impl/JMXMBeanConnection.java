@@ -1,6 +1,6 @@
-package com.amlinv.activemq.monitor.jmx.connection.impl;
+package com.amlinv.jmxutil.connection.impl;
 
-import com.amlinv.activemq.monitor.jmx.connection.MBeanAccessConnection;
+import com.amlinv.jmxutil.connection.MBeanAccessConnection;
 
 import javax.management.Attribute;
 import javax.management.InstanceNotFoundException;
