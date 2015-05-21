@@ -345,6 +345,10 @@ public class ActiveMQBrokerPoller {
     }
 
     protected String encodeLogStatString (String orig) {
+        if ( orig == null ) {
+            return "";
+        }
+
         return  orig.replaceAll("[|]", "%v%");
     }
 
