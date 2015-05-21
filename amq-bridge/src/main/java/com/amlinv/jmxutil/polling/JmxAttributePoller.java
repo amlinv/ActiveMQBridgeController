@@ -53,6 +53,7 @@ public class JmxAttributePoller {
     private boolean shutdownInd = false;
     private boolean pollActiveInd = false;
     private ThreadPoolExecutor threadPoolExecutor;
+    private boolean myThreadPoolExecutor = false;
 
     public JmxAttributePoller(List<Object> polledObjects) {
         this.polledObjects = polledObjects;
@@ -71,6 +72,7 @@ public class JmxAttributePoller {
     }
 
     public void setThreadPoolExecutor(ThreadPoolExecutor threadPoolExecutor) {
+        this.myThreadPoolExecutor = false;
         this.threadPoolExecutor = threadPoolExecutor;
     }
 
@@ -87,6 +89,7 @@ public class JmxAttributePoller {
 
             if ( this.threadPoolExecutor == null ) {
                 this.threadPoolExecutor = createThreadPoolExecutor();
+                this.myThreadPoolExecutor = true;
             }
 
             // Atomically indicate polling is active now so a caller can determine with certainty whether polling is
@@ -200,6 +203,10 @@ public class JmxAttributePoller {
 
     public void shutdown () {
         this.shutdownInd = true;
+
+        if ( this.myThreadPoolExecutor ) {
+            this.threadPoolExecutor.shutdown();
+        }
     }
 
     public void waitUntilShutdown () throws InterruptedException {

@@ -114,6 +114,14 @@ public class MonitorWebController {
                 oneDiscovererScheduler.stop();
             }
         }
+
+        synchronized ( this.brokerPollerMap ) {
+            for ( ActiveMQBrokerPoller onePoller : this.brokerPollerMap.values() ) {
+                onePoller.stop();
+            }
+        }
+
+        this.discovererExecutorService.shutdown();
     }
 
     @GET

@@ -100,7 +100,8 @@ http://cxf.apache.org/schemas/jaxrs.xsd">
     </bean>
 
 
-    <bean id="monitorWebController" class="com.amlinv.activemq.monitor.web.MonitorWebController" init-method="init">
+    <bean id="monitorWebController" class="com.amlinv.activemq.monitor.web.MonitorWebController"
+          init-method="init" destroy-method="shutdown">
         <property name="websocketBrokerStatsFeed" ref="websocketBrokerStatsFeed" />
         <property name="brokerRegistry" ref="brokerRegistry" />
         <property name="queueRegistry" ref="queueRegistry" />
