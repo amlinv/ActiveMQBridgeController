@@ -135,6 +135,7 @@ public class ActiveMQQueueStats implements MBeanLocationParameterSource {
         result.setNumConsumers(this.getNumConsumers() + other.getNumConsumers());
         result.setNumProducers(this.getNumProducers() + other.getNumProducers());
         result.setQueueSize(this.getQueueSize() + other.getQueueSize());
+        result.setInflightCount(this.getInflightCount() + other.getInflightCount());
 
         return  result;
     }
@@ -153,6 +154,7 @@ public class ActiveMQQueueStats implements MBeanLocationParameterSource {
         result.setNumConsumers(this.getNumConsumers());
         result.setNumProducers(this.getNumProducers());
         result.setQueueSize(this.getQueueSize());
+        result.setInflightCount(this.getInflightCount());
 
         return  result;
     }

@@ -462,6 +462,15 @@ amqBridgeApp.controller('amqMonitor', function($scope, $http) {
     $scope.monitoredBrokers = [];
     $scope.displayQueueStats = [];
 
+    $scope.show_producer_count = true;
+    $scope.show_consumer_count = true;
+    $scope.show_queue_size = true;
+    $scope.show_enqueue = true;
+    $scope.show_dequeue = true;
+    $scope.show_cursor_pct_usage = true;
+    $scope.show_mem_pct_usage = true;
+    $scope.show_inflight_count = true;
+
     $scope.queueData = {
         queues: {}
     };

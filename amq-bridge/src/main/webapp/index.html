@@ -181,6 +181,45 @@
             data-ng-click="showQueueBreakoutByBroker = false;" style="width: 100%;">
       BREAKOUT &lt;&lt;&lt;
     </button>
+
+    <!--               -->
+    <!-- FIELD TOGGLES -->
+    <!--               -->
+    <div style="height: 1em"></div>
+    <u>fields</u>
+    <br>
+
+    <input title="Producers" id="cb_show_producer_count" type="checkbox" data-ng-model="show_producer_count" />
+    <label title="Producers" for="cb_show_producer_count" style="font-size: 66%">producers</label>
+    <br>
+
+    <input title="Consumers" id="cb_show_consumer_count" type="checkbox" data-ng-model="show_consumer_count" />
+    <label title="Consumers" for="cb_show_consumer_count" style="font-size: 66%">consumers</label>
+    <br>
+
+    <input title="Queue Size" id="cb_show_queue_size" type="checkbox" data-ng-model="show_queue_size" />
+    <label title="Queue Size" for="cb_show_queue_size" style="font-size: 66%">queue size</label>
+    <br>
+
+    <input title="Enqueue" id="cb_show_enqueue" type="checkbox" data-ng-model="show_enqueue" />
+    <label title="Enqueue" for="cb_show_enqueue" style="font-size: 66%">enqueue</label>
+    <br>
+
+    <input title="Dequeue" id="cb_show_dequeue" type="checkbox" data-ng-model="show_dequeue" />
+    <label title="Dequeue" for="cb_show_dequeue" style="font-size: 66%">dequeue</label>
+    <br>
+
+    <input title="Cursor %" id="cb_show_cursor_pct_usage" type="checkbox" data-ng-model="show_cursor_pct_usage" />
+    <label title="Cursor %" for="cb_show_cursor_pct_usage" style="font-size: 66%">cursor %</label>
+    <br>
+
+    <input title="Memory %" id="cb_show_mem_pct_usage" type="checkbox" data-ng-model="show_mem_pct_usage" />
+    <label title="Memory %" for="cb_show_mem_pct_usage" style="font-size: 66%">mem %</label>
+    <br>
+
+    <input title="Inflight" id="cb_show_inflight_count" type="checkbox" data-ng-model="show_inflight_count" />
+    <label title="Inflight" for="cb_show_inflight_count" style="font-size: 66%">inflight</label>
+    <br>
   </div>
 
   <!-- reserve the space used by the nav/control panel so the rest lines up correctly -->
@@ -244,13 +283,14 @@
       <thead>
       <tr>
         <th>Queue</th>
-        <th>Producers</th>
-        <th>Consumers</th>
-        <th>Queue Size</th>
-        <th>Enqueue</th>
-        <th>Dequeue</th>
-        <th>Cursor % Usage</th>
-        <th>Memory % Usage</th>
+        <th data-ng-show="show_producer_count">Producers</th>
+        <th data-ng-show="show_consumer_count">Consumers</th>
+        <th data-ng-show="show_queue_size">Queue Size</th>
+        <th data-ng-show="show_enqueue">Enqueue</th>
+        <th data-ng-show="show_dequeue">Dequeue</th>
+        <th data-ng-show="show_cursor_pct_usage">Cursor %</th>
+        <th data-ng-show="show_mem_pct_usage">Memory %</th>
+        <th data-ng-show="show_inflight_count">Inflight</th>
       </tr>
       </thead>
       <tbody data-ng-repeat="queueStat in displayQueueStats | filter:monitorDestinationQuery:queueStatMatch | orderBy:'queueName'" style="overflow: auto;">
@@ -258,26 +298,29 @@
         <td>
           {{queueStat.queueName}}
         </td>
-        <td>
+        <td data-ng-show="show_producer_count">
           {{queueStat.numProducers}}
         </td>
-        <td>
+        <td data-ng-show="show_consumer_count">
           {{queueStat.numConsumers}}
         </td>
-        <td>
+        <td data-ng-show="show_queue_size">
           {{queueStat.queueSize}}
         </td>
-        <td>
+        <td data-ng-show="show_enqueue">
           {{queueStat.enqueueCount}}
         </td>
-        <td>
+        <td data-ng-show="show_dequeue">
           {{queueStat.dequeueCount}}
         </td>
-        <td>
+        <td data-ng-show="show_cursor_pct_usage">
           {{queueStat.cursorPercentUsage}}
         </td>
-        <td>
+        <td data-ng-show="show_mem_pct_usage">
           {{queueStat.memoryPercentUsage}}
+        </td>
+        <td data-ng-show="show_inflight_count">
+          {{queueStat.inflightCount}}
         </td>
       </tr>
       <tr class="breakoutStats"
@@ -286,26 +329,29 @@
         <td>
           &nbsp;&nbsp;&nbsp;&nbsp;{{brokerStatsForQueue.brokerName}}
         </td>
-        <td>
+        <td data-ng-show="show_producer_count">
           {{brokerStatsForQueue.numProducers}}
         </td>
-        <td>
+        <td data-ng-show="show_consumer_count">
           {{brokerStatsForQueue.numConsumers}}
         </td>
-        <td>
+        <td data-ng-show="show_queue_size">
           {{brokerStatsForQueue.queueSize}}
         </td>
-        <td>
+        <td data-ng-show="show_enqueue">
           {{brokerStatsForQueue.enqueueCount}}
         </td>
-        <td>
+        <td data-ng-show="show_dequeue">
           {{brokerStatsForQueue.dequeueCount}}
         </td>
-        <td>
+        <td data-ng-show="show_cursor_pct_usage">
           {{brokerStatsForQueue.cursorPercentUsage}}
         </td>
-        <td>
+        <td data-ng-show="show_mem_pct_usage">
           {{brokerStatsForQueue.memoryPercentUsage}}
+        </td>
+        <td data-ng-show="show_inflight_count">
+          {{brokerStatsForQueue.inflightCount}}
         </td>
       </tr>
       </tbody>
