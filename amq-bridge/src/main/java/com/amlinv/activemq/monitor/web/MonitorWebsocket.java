@@ -22,7 +22,7 @@ public class MonitorWebsocket {
     private static final Logger         LOG = LoggerFactory.getLogger(MonitorWebsocket.class);
 
     public static final long DEFAULT_SEND_TIMEOUT = 30000;
-    public static final long MAX_MSG_BACKLOG = 20;
+    public static final long MAX_MSG_BACKLOG = 1000;
 
     private static MonitorWebsocketRegistry registry;
     private static long sendTimeout = DEFAULT_SEND_TIMEOUT;
