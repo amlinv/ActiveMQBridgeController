@@ -3,6 +3,7 @@ package com.amlinv.activemq.monitor.activemq;
 import com.amlinv.activemq.registry.DestinationRegistry;
 import com.amlinv.activemq.registry.DestinationRegistryListener;
 import com.amlinv.activemq.registry.model.DestinationInfo;
+import com.amlinv.activemq.registry.model.DestinationState;
 import com.amlinv.jmxutil.connection.MBeanAccessConnectionFactory;
 import com.amlinv.jmxutil.polling.JmxAttributePoller;
 import com.amlinv.activemq.monitor.model.ActiveMQBrokerStats;
@@ -379,17 +380,17 @@ public class ActiveMQBrokerPoller {
      */
     protected class MyQueueRegistryListener implements DestinationRegistryListener {
         @Override
-        public void onPutEntry(String putKey, DestinationInfo putValue) {
+        public void onPutEntry(String putKey, DestinationState putValue) {
             addMonitoredQueue(putValue.getName());
         }
 
         @Override
-        public void onRemoveEntry(String removeKey, DestinationInfo removeValue) {
+        public void onRemoveEntry(String removeKey, DestinationState removeValue) {
             removeMonitoredQueue(removeValue.getName());
         }
 
         @Override
-        public void onReplaceEntry(String replaceKey, DestinationInfo oldValue, DestinationInfo newValue) {
+        public void onReplaceEntry(String replaceKey, DestinationState oldValue, DestinationState newValue) {
         }
     }
 }

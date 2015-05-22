@@ -3,6 +3,7 @@ package com.amlinv.activemq.monitor.web;
 import com.amlinv.activemq.discovery.MBeanDestinationDiscoverer;
 import com.amlinv.activemq.discovery.MBeanDestinationDiscovererScheduler;
 import com.amlinv.activemq.monitor.activemq.ActiveMQBrokerPoller;
+import com.amlinv.activemq.registry.model.DestinationState;
 import com.amlinv.jmxutil.connection.MBeanAccessConnectionFactory;
 import com.amlinv.jmxutil.polling.JmxActiveMQUtil;
 import com.amlinv.activemq.registry.BrokerRegistry;
@@ -264,7 +265,7 @@ public class MonitorWebController {
     }
 
     protected void performQueueAdd(String queueName) {
-        this.queueRegistry.putIfAbsent(queueName, new DestinationInfo(queueName));
+        this.queueRegistry.putIfAbsent(queueName, new DestinationState(queueName));
     }
 
     /**
@@ -325,7 +326,7 @@ public class MonitorWebController {
     protected void prepareBrokerQueueDiscoverer (String brokerName, String address,
                                                  MBeanAccessConnectionFactory connectionFactory) {
 
-        MBeanDestinationDiscoverer discoverer = new MBeanDestinationDiscoverer("Queue");
+        MBeanDestinationDiscoverer discoverer = new MBeanDestinationDiscoverer("Queue", address);
         discoverer.setmBeanAccessConnectionFactory(connectionFactory);
         discoverer.setBrokerName(brokerName);
         discoverer.setRegistry(this.queueRegistry);

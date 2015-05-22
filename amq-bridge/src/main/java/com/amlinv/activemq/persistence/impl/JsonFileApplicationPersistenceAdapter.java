@@ -5,6 +5,7 @@ import com.amlinv.activemq.registry.BrokerRegistry;
 import com.amlinv.activemq.registry.DestinationRegistry;
 import com.amlinv.activemq.registry.model.BrokerInfo;
 import com.amlinv.activemq.registry.model.DestinationInfo;
+import com.amlinv.activemq.registry.model.DestinationState;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.slf4j.Logger;
@@ -128,13 +129,13 @@ public class JsonFileApplicationPersistenceAdapter implements ApplicationPersist
     protected void update (MyDataModel source) {
         if (source.queueRegistry != null) {
             for (String queueName : source.queueRegistry.keySet()) {
-                this.queueRegistry.put(queueName, source.queueRegistry.get(queueName));
+                this.queueRegistry.put(queueName, new DestinationState(source.queueRegistry.get(queueName)));
             }
         }
 
         if (source.topicRegistry != null) {
             for (String topicName : source.topicRegistry.keySet()) {
-                this.topicRegistry.put(topicName, source.topicRegistry.get(topicName));
+                this.topicRegistry.put(topicName, new DestinationState(source.topicRegistry.get(topicName)));
             }
         }
 
@@ -146,8 +147,8 @@ public class JsonFileApplicationPersistenceAdapter implements ApplicationPersist
     }
 
     protected static class MyDataModel {
-        public Map<String, DestinationInfo> queueRegistry;
-        public Map<String, DestinationInfo> topicRegistry;
+        public Map<String, ? extends DestinationInfo> queueRegistry;
+        public Map<String, ? extends DestinationInfo> topicRegistry;
         public Map<String, BrokerInfo> brokerRegistry;
     }
 }

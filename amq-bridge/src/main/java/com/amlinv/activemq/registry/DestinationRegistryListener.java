@@ -1,6 +1,7 @@
 package com.amlinv.activemq.registry;
 
 import com.amlinv.activemq.registry.model.DestinationInfo;
+import com.amlinv.activemq.registry.model.DestinationState;
 import com.amlinv.server.util.RegistryListener;
 
 /**
@@ -8,5 +9,5 @@ import com.amlinv.server.util.RegistryListener;
  *
  * Created by art on 5/2/15.
  */
-public interface DestinationRegistryListener extends RegistryListener<String, DestinationInfo> {
+public interface DestinationRegistryListener extends RegistryListener<String, DestinationState> {
 }

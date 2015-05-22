@@ -1,6 +1,6 @@
 package com.amlinv.activemq.registry;
 
-import com.amlinv.activemq.registry.model.DestinationInfo;
+import com.amlinv.activemq.registry.model.DestinationState;
 import com.amlinv.server.util.ConcurrentRegistry;
 
 /**
@@ -9,5 +9,5 @@ import com.amlinv.server.util.ConcurrentRegistry;
  *
  * Created by art on 5/2/15.
  */
-public class DestinationRegistry extends ConcurrentRegistry<String, DestinationInfo> {
+public class DestinationRegistry extends ConcurrentRegistry<String, DestinationState> {
 }

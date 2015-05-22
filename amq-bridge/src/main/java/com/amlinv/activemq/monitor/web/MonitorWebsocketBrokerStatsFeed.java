@@ -6,6 +6,7 @@ import com.amlinv.activemq.monitor.model.ActiveMQQueueStats;
 import com.amlinv.activemq.monitor.model.BrokerStatsPackage;
 import com.amlinv.activemq.registry.DestinationRegistryListener;
 import com.amlinv.activemq.registry.model.DestinationInfo;
+import com.amlinv.activemq.registry.model.DestinationState;
 import com.amlinv.util.thread.DaemonThreadFactory;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -139,12 +140,14 @@ public class MonitorWebsocketBrokerStatsFeed implements ActiveMQBrokerPollerList
      */
     protected class MyQueueRegistryListener implements DestinationRegistryListener {
         @Override
-        public void onPutEntry(String putKey, DestinationInfo putValue) {
-            fireMonitorEvent("queueAdded", putValue.getName());
+        public void onPutEntry(String putKey, DestinationState putValue) {
+            String queueNameJson = gson.toJson(putValue.getName());
+
+            fireMonitorEvent("queueAdded", queueNameJson);
         }
 
         @Override
-        public void onRemoveEntry(String removeKey, DestinationInfo removeValue) {
+        public void onRemoveEntry(String removeKey, DestinationState removeValue) {
             //
             // Remove the statistics for the queue from all of the broker statistics.
             //
@@ -154,11 +157,13 @@ public class MonitorWebsocketBrokerStatsFeed implements ActiveMQBrokerPollerList
                 }
             }
 
-            fireMonitorEvent("queueRemoved", removeValue.getName());
+            String queueNameJson = gson.toJson(removeValue.getName());
+
+            fireMonitorEvent("queueRemoved", queueNameJson);
         }
 
         @Override
-        public void onReplaceEntry(String replaceKey, DestinationInfo oldValue, DestinationInfo newValue) {
+        public void onReplaceEntry(String replaceKey, DestinationState oldValue, DestinationState newValue) {
         }
     }
 }
