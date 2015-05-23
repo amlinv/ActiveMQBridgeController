@@ -37,38 +37,38 @@ input, .field {
   color: white;
 }
 
-.bridgeList.ng-enter,
-.bridgeList.ng-leave,
-.bridgeList.ng-move {
-    -webkit-transition: 0.5s linear all;
-    -moz-transition: 0.5s linear all;
-    -o-transition: 0.5s linear all;
-    transition: 0.5s linear all;
+.ngShowTrans.ng-enter,
+.ngShowTrans.ng-leave,
+.ngShowTrans.ng-move {
+    -webkit-transition: 1.0s linear all;
+    -moz-transition: 1.0s linear all;
+    -o-transition: 1.0s linear all;
+    transition: 1.0s linear all;
 }
 
-.bridgeList.ng-enter,
-.bridgeList.ng-move {
-    opacity: 0;
-    height: 0;
+.ngShowTrans.ng-enter,
+.ngShowTrans.ng-move {
     overflow: hidden;
+    background-color: black;
 }
 
-.bridgeList.ng-move.ng-move-active,
-.bridgeList.ng-enter.ng-enter-active {
-    opacity: 1;
-    height: 1em;
+.ngShowTrans.ng-move.ng-move-active,
+.ngShowTrans.ng-enter.ng-enter-active {
+    background-color: white;
 }
 
-.bridgeList.ng-leave {
-    opacity: 1;
+.ngShowTrans.ng-leave {
     overflow: hidden;
+
+    background-color: black;
 }
 
-.bridgeList.ng-leave.ng-leave-active {
-    opacity: 0;
+.ngShowTrans.ng-leave.ng-leave-active {
     height: 0;
     padding-top: 0;
     padding-bottom: 0;
+
+    background-color: white;
 }
 
 .note-text.ng-enter {
@@ -76,6 +76,7 @@ input, .field {
     -moz-transition: 0.5s linear all;
     -o-transition: 0.5s linear all;
     transition: 0.5s linear all;
+    height: auto;
 }
 
 .note-text.ng-enter {

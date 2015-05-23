@@ -47,8 +47,8 @@
         <th>Operations</th>
       </tr>
       </thead>
-      <tbody data-ng-repeat="bridge in bridges | filter:srcUrlQuery | filter:destUrlQuery">
-      <tr class="bridgeList" style="font-size: small">
+      <tbody class="ngShowTrans" data-ng-repeat="bridge in bridges | filter:srcUrlQuery | filter:destUrlQuery">
+      <tr style="font-size: small">
         <td>
           <span class="bridge-field" data-ng-hide="bridge.editMode">{{bridge.id}}</span>
           <input id="bridge_id" type="text" data-ng-model="bridge.id" data-ng-show="bridge.editMode">
@@ -94,8 +94,8 @@
           </button>
         </td>
       </tr>
-      <tr>
-        <td colspan="6" data-ng-show="showStats">
+      <tr class="ngShowTrans" data-ng-show="showStats">
+        <td colspan="6">
                   <span class="col-md-2 stat-even" title="Number of messages received by the bridge">
                       in: {{bridge.stats.numMessagesReceived}}</span>
                   <span class="col-md-2 stat-odd" title="Average rate of messages received by the bridge since started">
@@ -218,7 +218,7 @@
     <br>
 
     <input title="Inflight" id="cb_show_inflight_count" type="checkbox" data-ng-model="show_inflight_count" />
-    <label title="Inflight" for="cb_show_inflight_count" style="font-size: 66%">inflight</label>
+    <label title="Inflight" for="cb_show_mem_pct_usage" style="font-size: 66%">inflight</label>
     <br>
   </div>
 
@@ -239,8 +239,8 @@
         <th>Total Messages</th>
       </tr>
       </thead>
-      <tbody data-ng-repeat="monitoredBroker in monitoredBrokers">
-      <tr class="bridgeList" style="font-size: small">
+      <tbody class="ngShowTrans_pleaseFixUpdatesFirst" data-ng-repeat="monitoredBroker in monitoredBrokers">
+      <tr style="font-size: small">
         <td>
           <div class="field">{{monitoredBroker.brokerStats.brokerName}}</div>
         </td>
@@ -293,8 +293,10 @@
         <th data-ng-show="show_inflight_count">Inflight</th>
       </tr>
       </thead>
-      <tbody data-ng-repeat="queueStat in displayQueueStats | filter:monitorDestinationQuery:queueStatMatch | orderBy:'queueName'" style="overflow: auto;">
-      <tr class="bridgeList" style="font-size: small">
+      <tbody class="ngShowTrans"
+             data-ng-repeat="queueStat in displayQueueStats | filter:monitorDestinationQuery:queueStatMatch | orderBy:'queueName'"
+             style="overflow: auto;">
+      <tr style="font-size: small">
         <td>
           {{queueStat.queueName}}
         </td>
@@ -324,6 +326,7 @@
         </td>
       </tr>
       <tr class="breakoutStats"
+          class="ngShowTrans"
           data-ng-show="showQueueBreakoutByBroker"
           data-ng-repeat="brokerStatsForQueue in queueStat.brokerDetails | orderBy:'brokerName'">
         <td>
