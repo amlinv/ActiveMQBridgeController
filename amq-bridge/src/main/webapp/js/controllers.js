@@ -783,19 +783,38 @@ amqBridgeApp.controller('amqMonitor', function($scope, $http) {
             var newCount = $scope.displayQueueStats.push(stats);
             $scope.queueData.queues[queueName] = stats;
         }
-    }
+    };
 
     $scope.onMonitoredQueueRemoved = function (queueName) {
+        // Mark the entry as deleted; the user will see the indication and can trigger the actual removal.
+        if ( queueName in $scope.queueData.queues ) {
+            var queueStats = $scope.queueData.queues[queueName];
+            queueStats.deleted = true;
+            queueStats.dynamicClasses = "deletedItemPendingRemoval";
+        }
+    };
+
+    /**
+     * Check whether the named queue has been deleted and remove it from the UI now if so.
+     *
+     * @param queueName
+     */
+    $scope.checkRemoveQueueFromMonitorUi = function (queueName) {
         if ( queueName in $scope.queueData.queues ) {
             var rmStats = $scope.queueData.queues[queueName];
-            delete $scope.queueData.queues[queueName];
 
-            var pos = $scope.displayQueueStats.indexOf(rmStats);
-            if ( pos != -1 ) {
-                $scope.displayQueueStats.splice(pos, 1);
+            if ( rmStats.deleted ) {
+                rmStats.dynamicClasses = "";
+
+                delete $scope.queueData.queues[queueName];
+
+                var pos = $scope.displayQueueStats.indexOf(rmStats);
+                if (pos != -1) {
+                    $scope.displayQueueStats.splice(pos, 1);
+                }
             }
         }
-    }
+    };
 
     //
     // FILTERING

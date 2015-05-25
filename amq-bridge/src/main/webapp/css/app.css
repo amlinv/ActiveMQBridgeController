@@ -126,3 +126,8 @@ button {
     color: white;
     background-color: black;
 }
+
+.deletedItemPendingRemoval {
+    background-color: red;
+    color: white;
+}

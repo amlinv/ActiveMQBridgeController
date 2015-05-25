@@ -293,10 +293,12 @@
         <th data-ng-show="show_inflight_count">Inflight</th>
       </tr>
       </thead>
-      <tbody class="ngShowTrans"
-             data-ng-repeat="queueStat in displayQueueStats | filter:monitorDestinationQuery:queueStatMatch | orderBy:'queueName'"
-             style="overflow: auto;">
-      <tr style="font-size: small">
+      <tbody style="overflow: auto;">
+      <tr style="font-size: small"
+          class="ngShowTrans"
+          data-ng-class="queueStat.dynamicClasses"
+          data-ng-repeat-start="queueStat in displayQueueStats | filter:monitorDestinationQuery:queueStatMatch | orderBy:'queueName'"
+          data-ng-click="checkRemoveQueueFromMonitorUi(queueStat.queueName);">
         <td>
           {{queueStat.queueName}}
         </td>
@@ -327,6 +329,7 @@
       </tr>
       <tr class="breakoutStats"
           class="ngShowTrans"
+          data-ng-class="queueStat.dynamicClasses"
           data-ng-show="showQueueBreakoutByBroker"
           data-ng-repeat="brokerStatsForQueue in queueStat.brokerDetails | orderBy:'brokerName'">
         <td>
@@ -357,6 +360,8 @@
           {{brokerStatsForQueue.inflightCount}}
         </td>
       </tr>
+      <!-- EMPTY TR to terminate the data-ng-repeat-start since the last TR above has its own repeat -->
+      <tr data-ng-repeat-end data-ng-hide="true"></tr>
       </tbody>
     </table>
 
