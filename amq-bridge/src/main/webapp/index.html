@@ -218,7 +218,11 @@
     <br>
 
     <input title="Inflight" id="cb_show_inflight_count" type="checkbox" data-ng-model="show_inflight_count" />
-    <label title="Inflight" for="cb_show_mem_pct_usage" style="font-size: 66%">inflight</label>
+    <label title="Inflight" for="cb_show_inflight_count" style="font-size: 66%">inflight</label>
+    <br>
+
+    <input title="Dequeue Rate" id="cb_show_dequeue_rate" type="checkbox" data-ng-model="show_dequeue_rate" />
+    <label title="Dequeue Rate" for="cb_show_dequeue_rate" style="font-size: 66%">dequeue rate</label>
     <br>
   </div>
 
@@ -291,6 +295,7 @@
         <th data-ng-show="show_cursor_pct_usage">Cursor %</th>
         <th data-ng-show="show_mem_pct_usage">Memory %</th>
         <th data-ng-show="show_inflight_count">Inflight</th>
+        <th data-ng-show="show_dequeue_rate">Dequeue Rate (min/hr/day)</th>
       </tr>
       </thead>
       <tbody style="overflow: auto;">
@@ -326,6 +331,13 @@
         <td data-ng-show="show_inflight_count">
           {{queueStat.inflightCount}}
         </td>
+        <td data-ng-show="show_dequeue_rate">
+          {{queueStat.dequeueRate1Minute | number:2 }}
+          /
+          {{queueStat.dequeueRate1Hour | number:2 }}
+          /
+          {{queueStat.dequeueRate1Day | number:2 }}
+        </td>
       </tr>
       <tr class="breakoutStats"
           class="ngShowTrans"
@@ -358,6 +370,9 @@
         </td>
         <td data-ng-show="show_inflight_count">
           {{brokerStatsForQueue.inflightCount}}
+        </td>
+        <td data-ng-show="show_dequeue_rate">
+          <i>unknown</i>
         </td>
       </tr>
       <!-- EMPTY TR to terminate the data-ng-repeat-start since the last TR above has its own repeat -->

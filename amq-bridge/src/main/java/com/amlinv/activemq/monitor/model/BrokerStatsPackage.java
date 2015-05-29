@@ -7,9 +7,9 @@ import java.util.Map;
  */
 public class BrokerStatsPackage {
     private final ActiveMQBrokerStats brokerStats;
-    private final Map<String, ActiveMQQueueStats> queueStats;
+    private final Map<String, ActiveMQQueueJmxStats> queueStats;
 
-    public BrokerStatsPackage(ActiveMQBrokerStats brokerStats, Map<String, ActiveMQQueueStats> queueStats) {
+    public BrokerStatsPackage(ActiveMQBrokerStats brokerStats, Map<String, ActiveMQQueueJmxStats> queueStats) {
         this.brokerStats = brokerStats;
         this.queueStats = queueStats;
     }
@@ -18,7 +18,7 @@ public class BrokerStatsPackage {
         return brokerStats;
     }
 
-    public Map<String, ActiveMQQueueStats> getQueueStats() {
+    public Map<String, ActiveMQQueueJmxStats> getQueueStats() {
         return queueStats;
     }
 }

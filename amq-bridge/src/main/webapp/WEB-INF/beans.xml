@@ -62,6 +62,7 @@ http://cxf.apache.org/schemas/jaxrs.xsd">
         <property name="listeners">
             <list value-type="com.amlinv.server.util.RegistryListener">
                 <value>#{websocketBrokerStatsFeed.queueRegistryListener}</value>
+                <value>#{queueStatisticsRegistry.queueRegistryListener}</value>
             </list>
         </property>
     </bean>
@@ -131,10 +132,15 @@ http://cxf.apache.org/schemas/jaxrs.xsd">
         </jaxrs:providers>
     </jaxrs:server>
 
+    <!-- STATISTICS REGISTRY -->
+    <bean id="queueStatisticsRegistry" class="com.amlinv.activemq.stats.QueueStatisticsRegistry" />
+
     <!-- MONITORING WEBSOCKET -->
     <bean id="monitorWebsocketRegistry" class="com.amlinv.activemq.monitor.web.MonitorWebsocketRegistry" />
     <bean id="websocketBrokerStatsFeed" class="com.amlinv.activemq.monitor.web.MonitorWebsocketBrokerStatsFeed">
         <property name="websocketRegistry" ref="monitorWebsocketRegistry" />
+        <property name="queueStatisticsRegistry" ref="queueStatisticsRegistry" />
+        <!--<property name="metricRegistry" ref="metricRegistry" />-->
     </bean>
 
     <!-- CLASS STATIC FIELD INJECTORS -->

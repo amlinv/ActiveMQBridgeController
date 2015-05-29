@@ -2,11 +2,11 @@ package com.amlinv.activemq.monitor.web;
 
 import com.amlinv.activemq.monitor.activemq.ActiveMQBrokerPollerListener;
 import com.amlinv.activemq.monitor.model.ActiveMQBrokerStats;
-import com.amlinv.activemq.monitor.model.ActiveMQQueueStats;
+import com.amlinv.activemq.monitor.model.ActiveMQQueueJmxStats;
 import com.amlinv.activemq.monitor.model.BrokerStatsPackage;
 import com.amlinv.activemq.registry.DestinationRegistryListener;
-import com.amlinv.activemq.registry.model.DestinationInfo;
 import com.amlinv.activemq.registry.model.DestinationState;
+import com.amlinv.activemq.stats.QueueStatisticsRegistry;
 import com.amlinv.util.thread.DaemonThreadFactory;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -14,11 +14,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Map;
-import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 /**
  * Created by art on 5/14/15.
@@ -30,17 +27,15 @@ public class MonitorWebsocketBrokerStatsFeed implements ActiveMQBrokerPollerList
 
     private MonitorWebsocketRegistry websocketRegistry;
 
-    private Map<String, Map<String, ActiveMQQueueStats>> queueStatsByBroker = new TreeMap<>();
-    private Map<String, ActiveMQQueueStats> queueStatsMap = new TreeMap<>();
-
     private Gson gson = new GsonBuilder().create();
 
-    private ThreadPoolExecutor executor =
-            new ThreadPoolExecutor(
-                    10, 10, 5, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(),
-                    new DaemonThreadFactory("Monitor-Websocket-Dispatcher-Thread-"));
+    private ScheduledThreadPoolExecutor executor =
+            new ScheduledThreadPoolExecutor(
+                    10, new DaemonThreadFactory("Monitor-Websocket-Dispatcher-Thread-"));
 
     private DestinationRegistryListener myQueueRegistryListener = new MyQueueRegistryListener();
+
+    private QueueStatisticsRegistry queueStatisticsRegistry;
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //
@@ -56,16 +51,27 @@ public class MonitorWebsocketBrokerStatsFeed implements ActiveMQBrokerPollerList
         this.websocketRegistry = websocketRegistry;
     }
 
-    public ThreadPoolExecutor getExecutor() {
+    public ScheduledThreadPoolExecutor getExecutor() {
         return executor;
     }
 
-    public void setExecutor(ThreadPoolExecutor executor) {
+    public void setExecutor(ScheduledThreadPoolExecutor executor) {
         this.executor = executor;
     }
 
     public DestinationRegistryListener getQueueRegistryListener() {
         return myQueueRegistryListener;
+    }
+
+    public QueueStatisticsRegistry getQueueStatisticsRegistry() {
+        return queueStatisticsRegistry;
+    }
+
+    public void setQueueStatisticsRegistry(QueueStatisticsRegistry queueStatisticsRegistry) {
+        this.queueStatisticsRegistry = queueStatisticsRegistry;
+    }
+
+    public void init () {
     }
 
     @Override
@@ -75,19 +81,24 @@ public class MonitorWebsocketBrokerStatsFeed implements ActiveMQBrokerPollerList
 
     protected void onBrokerStatsUpdate (BrokerStatsPackage brokerStatsPackage) {
         ActiveMQBrokerStats brokerStats = brokerStatsPackage.getBrokerStats();
-        Map<String, ActiveMQQueueStats> queueStats = new ConcurrentHashMap<>(brokerStatsPackage.getQueueStats());
 
-        synchronized ( queueStatsByBroker ) {
-            queueStatsByBroker.put(brokerStats.getBrokerName(), queueStats);
+        String brokerName = brokerStats.getBrokerName();
+        Map<String, ActiveMQQueueJmxStats> oldQueueStats;
+        Map<String, ActiveMQQueueJmxStats> newQueueStats = new ConcurrentHashMap<>(brokerStatsPackage.getQueueStats());
+
+
+        //
+        // Update the metrics for the queues for which statistics were collected.
+        //
+        for ( ActiveMQQueueJmxStats brokerQueueStats : brokerStatsPackage.getQueueStats().values() ) {
+            this.queueStatisticsRegistry.onUpdatedStats(brokerQueueStats);
         }
 
-        // TBD: not every time (use a timer and/or check for all polled brokers reporting in)
         String brokerStatsJson = gson.toJson(brokerStatsPackage);
         fireMonitorEvent("brokerStats", brokerStatsJson);
 
-        aggregateQueueStats();
-
-        String queueStatsJson = gson.toJson(queueStatsMap);
+        // TBD: not every time (use a timer and/or check for all polled brokers reporting in)
+        String queueStatsJson = gson.toJson(queueStatisticsRegistry.getQueueStats());
         fireMonitorEvent("queueStats", queueStatsJson);
     }
 
@@ -105,36 +116,6 @@ public class MonitorWebsocketBrokerStatsFeed implements ActiveMQBrokerPollerList
         }
     }
 
-    protected void aggregateQueueStats () {
-        // TBD: prevent high rate of calculation (perhaps perfom on schedule and only when updates detected)
-        Map<String, ActiveMQQueueStats> newQueueStats = new TreeMap<>();
-
-        synchronized ( queueStatsByBroker ) {
-            for ( Map.Entry<String, Map<String, ActiveMQQueueStats>> statsforQueuesFromOneBroker :
-                    queueStatsByBroker.entrySet() ) {
-                Map<String, ActiveMQQueueStats> queueStats = statsforQueuesFromOneBroker.getValue();
-
-                for ( Map.Entry<String, ActiveMQQueueStats> oneQueueStats : queueStats.entrySet() ) {
-                    String queueName = oneQueueStats.getKey();
-                    ActiveMQQueueStats newStats = oneQueueStats.getValue();
-
-                    ActiveMQQueueStats base = newQueueStats.get(queueName);
-                    ActiveMQQueueStats updated;
-                    if ( base != null ) {
-                        updated = base.add(newStats, "totals");
-                    } else {
-                        // TBD: after changing the poller to work with immutable copies, stop copying here
-                        updated = newStats.copy("totals");
-                    }
-
-                    newQueueStats.put(queueName, updated);
-                }
-            }
-
-            queueStatsMap = newQueueStats;
-        }
-    }
-
     /**
      * Listener for events on the queue registry.
      */
@@ -149,14 +130,8 @@ public class MonitorWebsocketBrokerStatsFeed implements ActiveMQBrokerPollerList
         @Override
         public void onRemoveEntry(String removeKey, DestinationState removeValue) {
             //
-            // Remove the statistics for the queue from all of the broker statistics.
+            // Notify the websocket listeners of the queue removal.
             //
-            synchronized ( queueStatsByBroker ) {
-                for ( Map<String, ActiveMQQueueStats> queueStatsForBroker : queueStatsByBroker.values() ) {
-                    queueStatsForBroker.remove(removeValue.getName());
-                }
-            }
-
             String queueNameJson = gson.toJson(removeValue.getName());
 
             fireMonitorEvent("queueRemoved", queueNameJson);

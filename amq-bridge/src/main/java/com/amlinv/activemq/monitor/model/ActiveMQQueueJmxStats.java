@@ -7,7 +7,7 @@ import com.amlinv.jmxutil.annotation.MBeanLocation;
  * Created by art on 3/31/15.
  */
 @MBeanLocation(onamePattern = "org.apache.activemq:type=Broker,brokerName=${brokerName},destinationType=Queue,destinationName=${queueName}")
-public class ActiveMQQueueStats implements MBeanLocationParameterSource {
+public class ActiveMQQueueJmxStats implements MBeanLocationParameterSource {
     private final String brokerName;
     private final String queueName;
 
@@ -20,7 +20,7 @@ public class ActiveMQQueueStats implements MBeanLocationParameterSource {
     private int memoryPercentUsage;
     private long inflightCount;
 
-    public ActiveMQQueueStats(String brokerName, String queueName) {
+    public ActiveMQQueueJmxStats(String brokerName, String queueName) {
         this.brokerName = brokerName;
         this.queueName = queueName;
     }
@@ -126,8 +126,8 @@ public class ActiveMQQueueStats implements MBeanLocationParameterSource {
      * @param resultBrokerName
      * @return
      */
-    public ActiveMQQueueStats add (ActiveMQQueueStats other, String resultBrokerName) {
-        ActiveMQQueueStats result = new ActiveMQQueueStats(resultBrokerName, this.queueName);
+    public ActiveMQQueueJmxStats add (ActiveMQQueueJmxStats other, String resultBrokerName) {
+        ActiveMQQueueJmxStats result = new ActiveMQQueueJmxStats(resultBrokerName, this.queueName);
         result.setCursorPercentUsage(Math.max(this.getCursorPercentUsage(), other.getCursorPercentUsage()));
         result.setDequeueCount(this.getDequeueCount() + other.getDequeueCount());
         result.setEnqueueCount(this.getEnqueueCount() + other.getEnqueueCount());
@@ -141,21 +141,48 @@ public class ActiveMQQueueStats implements MBeanLocationParameterSource {
     }
 
     /**
-     * Return a copy of this queue stats structure.
+     * Return a duplicate of this queue stats structure.
      *
-     *  @return
+     * @return new queue stats structure with the same values.
      */
-    public ActiveMQQueueStats copy (String brokerName) {
-        ActiveMQQueueStats result = new ActiveMQQueueStats(brokerName, this.queueName);
-        result.setCursorPercentUsage(this.getCursorPercentUsage());
-        result.setDequeueCount(this.getDequeueCount());
-        result.setEnqueueCount(this.getEnqueueCount());
-        result.setMemoryPercentUsage(this.getMemoryPercentUsage());
-        result.setNumConsumers(this.getNumConsumers());
-        result.setNumProducers(this.getNumProducers());
-        result.setQueueSize(this.getQueueSize());
-        result.setInflightCount(this.getInflightCount());
+    public ActiveMQQueueJmxStats dup (String brokerName) {
+        ActiveMQQueueJmxStats result = new ActiveMQQueueJmxStats(brokerName, this.queueName);
+        this.copyOut(result);
 
         return  result;
+    }
+
+    /**
+     * Copy out the values to the given destination.
+     *
+     * @param other target stats object to receive the values from this one.
+     */
+    public void copyOut (ActiveMQQueueJmxStats other) {
+        other.setCursorPercentUsage(this.getCursorPercentUsage());
+        other.setDequeueCount(this.getDequeueCount());
+        other.setEnqueueCount(this.getEnqueueCount());
+        other.setMemoryPercentUsage(this.getMemoryPercentUsage());
+        other.setNumConsumers(this.getNumConsumers());
+        other.setNumProducers(this.getNumProducers());
+        other.setQueueSize(this.getQueueSize());
+        other.setInflightCount(this.getInflightCount());
+    }
+
+    /**
+     * Subtract the given stats from this one and return the difference.
+     */
+    public ActiveMQQueueJmxStats subtract (ActiveMQQueueJmxStats other) {
+        ActiveMQQueueJmxStats result = new ActiveMQQueueJmxStats(this.brokerName, this.queueName);
+
+        result.setDequeueCount(this.getDequeueCount() - other.getDequeueCount());
+        result.setEnqueueCount(this.getEnqueueCount() - other.getEnqueueCount());
+        result.setCursorPercentUsage(this.getCursorPercentUsage() - other.getCursorPercentUsage());
+        result.setMemoryPercentUsage(this.getMemoryPercentUsage() - other.getMemoryPercentUsage());
+        result.setNumConsumers(this.getNumConsumers() - other.getNumConsumers());
+        result.setNumConsumers(this.getNumProducers() - other.getNumProducers());
+        result.setQueueSize(this.getQueueSize() - other.getQueueSize());
+        result.setInflightCount(this.getInflightCount() - other.getInflightCount());
+
+        return result;
     }
 }

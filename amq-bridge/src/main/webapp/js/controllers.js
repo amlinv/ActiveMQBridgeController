@@ -470,6 +470,7 @@ amqBridgeApp.controller('amqMonitor', function($scope, $http) {
     $scope.show_cursor_pct_usage = true;
     $scope.show_mem_pct_usage = true;
     $scope.show_inflight_count = true;
+    $scope.show_dequeue_rate = true;
 
     $scope.queueData = {
         queues: {}

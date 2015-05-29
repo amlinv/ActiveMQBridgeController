@@ -2,12 +2,11 @@ package com.amlinv.activemq.monitor.activemq;
 
 import com.amlinv.activemq.registry.DestinationRegistry;
 import com.amlinv.activemq.registry.DestinationRegistryListener;
-import com.amlinv.activemq.registry.model.DestinationInfo;
 import com.amlinv.activemq.registry.model.DestinationState;
 import com.amlinv.jmxutil.connection.MBeanAccessConnectionFactory;
 import com.amlinv.jmxutil.polling.JmxAttributePoller;
 import com.amlinv.activemq.monitor.model.ActiveMQBrokerStats;
-import com.amlinv.activemq.monitor.model.ActiveMQQueueStats;
+import com.amlinv.activemq.monitor.model.ActiveMQQueueJmxStats;
 import com.amlinv.activemq.monitor.model.BrokerStatsPackage;
 import com.amlinv.logging.RepeatLogMessageSuppressor;
 import org.slf4j.Logger;
@@ -185,10 +184,10 @@ public class ActiveMQBrokerPoller {
     }
 
     protected BrokerStatsPackage preparePolledResultStorage () {
-        Map<String, ActiveMQQueueStats> queueStatsMap = new TreeMap<>();
+        Map<String, ActiveMQQueueJmxStats> queueStatsMap = new TreeMap<>();
 
         for ( String oneQueueName : queueRegistry.keys() ) {
-            ActiveMQQueueStats queueStats = new ActiveMQQueueStats(this.brokerName, oneQueueName);
+            ActiveMQQueueJmxStats queueStats = new ActiveMQQueueJmxStats(this.brokerName, oneQueueName);
 
             queueStatsMap.put(oneQueueName, queueStats);
         }
@@ -204,7 +203,7 @@ public class ActiveMQBrokerPoller {
 
         result.add(resultStorage.getBrokerStats());
 
-        for ( ActiveMQQueueStats oneQueueStats : resultStorage.getQueueStats().values() ) {
+        for ( ActiveMQQueueJmxStats oneQueueStats : resultStorage.getQueueStats().values() ) {
             result.add(oneQueueStats);
         }
 
@@ -278,7 +277,7 @@ public class ActiveMQBrokerPoller {
         }
 
         if ( resultStorage.getQueueStats() != null ) {
-            for (Map.Entry<String, ActiveMQQueueStats> oneEntry : resultStorage.getQueueStats().entrySet()) {
+            for (Map.Entry<String, ActiveMQQueueJmxStats> oneEntry : resultStorage.getQueueStats().entrySet()) {
                 String line = formatQueueStatsLogLine(oneEntry.getKey(), oneEntry.getValue());
 
                 this.STATS_LOG.info("{}", line.toString());
@@ -318,7 +317,7 @@ public class ActiveMQBrokerPoller {
         return buffer.toString();
     }
 
-    private String formatQueueStatsLogLine(String queueName, ActiveMQQueueStats stats) {
+    private String formatQueueStatsLogLine(String queueName, ActiveMQQueueJmxStats stats) {
         StringBuilder buffer = new StringBuilder();
 
         buffer.append("|queue-stats|");
