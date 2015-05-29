@@ -1,6 +1,8 @@
 package com.amlinv.activemq.stats;
 
 import com.amlinv.activemq.monitor.model.ActiveMQQueueJmxStats;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -11,9 +13,13 @@ import java.util.Map;
  * Created by art on 5/28/15.
  */
 public class QueueStatisticsCollection {
+    private static final Logger DEFAULT_LOGGER = LoggerFactory.getLogger(QueueStatisticsCollection.class);
+
     private final String queueName;
 
     private final Map<String, QueueStatMeasurements> statsByBroker = new HashMap<>();
+
+    private Logger log = DEFAULT_LOGGER;
 
     private ActiveMQQueueJmxStats aggregatedStats;
     private double aggregateDequeueRateOneMinute = 0.0;
@@ -27,11 +33,23 @@ public class QueueStatisticsCollection {
         this.queueName = queueName;
     }
 
+    public Logger getLog() {
+        return log;
+    }
+
+    public void setLog(Logger log) {
+        this.log = log;
+    }
+
     public String getQueueName() {
         return queueName;
     }
 
     public void onUpdatedStats (ActiveMQQueueJmxStats updatedStats) {
+        this.log.trace("Have updated stats for queue {}; consumer-count={}", this.queueName,
+                updatedStats.getNumConsumers());
+
+
         String brokerName = updatedStats.getBrokerName();
         synchronized ( this.statsByBroker ) {
             QueueStatMeasurements brokerQueueStats = this.statsByBroker.get(brokerName);

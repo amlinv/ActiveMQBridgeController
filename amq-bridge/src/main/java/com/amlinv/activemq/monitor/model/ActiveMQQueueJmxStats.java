@@ -179,7 +179,7 @@ public class ActiveMQQueueJmxStats implements MBeanLocationParameterSource {
         result.setCursorPercentUsage(this.getCursorPercentUsage() - other.getCursorPercentUsage());
         result.setMemoryPercentUsage(this.getMemoryPercentUsage() - other.getMemoryPercentUsage());
         result.setNumConsumers(this.getNumConsumers() - other.getNumConsumers());
-        result.setNumConsumers(this.getNumProducers() - other.getNumProducers());
+        result.setNumProducers(this.getNumProducers() - other.getNumProducers());
         result.setQueueSize(this.getQueueSize() - other.getQueueSize());
         result.setInflightCount(this.getInflightCount() - other.getInflightCount());
 
