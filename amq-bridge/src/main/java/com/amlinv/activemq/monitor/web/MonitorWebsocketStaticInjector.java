@@ -1,5 +1,7 @@
 package com.amlinv.activemq.monitor.web;
 
+import com.amlinv.javasched.Scheduler;
+
 /**
  * Spring injection class for getting the websocket registry into the MonitorWebsocket.
  *
@@ -20,5 +22,9 @@ public class MonitorWebsocketStaticInjector {
 
     public void setSendTimeout (long newTimeout) {
         MonitorWebsocket.setSendTimeout(newTimeout);
+    }
+
+    public void setScheduler(Scheduler newScheduler) {
+        MonitorWebsocket.setScheduler(newScheduler);
     }
 }

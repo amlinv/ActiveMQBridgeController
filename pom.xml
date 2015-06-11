@@ -18,6 +18,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <jackson.version>1.8.6</jackson.version>
         <jaxrs.version>1.1.1</jaxrs.version>
+        <javasched.version>1.0.0</javasched.version>
         <junit.version>4.10</junit.version>
         <log4j.version>2.2</log4j.version>
         <metrics.version>3.0.3-SNAPSHOT</metrics.version>
@@ -112,6 +113,13 @@
                 <groupId>com.amlinv</groupId>
                 <artifactId>stats-util</artifactId>
                 <version>${project.version}</version>
+            </dependency>
+
+            <!-- JAVA Scheduler -->
+            <dependency>
+                <groupId>com.amlinv</groupId>
+                <artifactId>java-sched</artifactId>
+                <version>${javasched.version}</version>
             </dependency>
 
             <!-- CXF -->

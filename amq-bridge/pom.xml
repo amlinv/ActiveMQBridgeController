@@ -25,6 +25,11 @@
         </dependency>
 
         <dependency>
+            <groupId>com.amlinv</groupId>
+            <artifactId>java-sched</artifactId>
+        </dependency>
+
+        <dependency>
             <groupId>org.apache.cxf</groupId>
             <artifactId>cxf-rt-frontend-jaxrs</artifactId>
         </dependency>

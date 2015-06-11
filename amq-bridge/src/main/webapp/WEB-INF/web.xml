@@ -12,6 +12,16 @@
 		<param-value>WEB-INF/beans.xml</param-value>
 	</context-param>
 
+    <!-- Increase the thread count used for WebSockets -->
+    <context-param>
+        <param-name>org.apache.tomcat.websocket.executorMaxSize</param-name>
+        <param-value>25</param-value>
+    </context-param>
+    <context-param>
+        <param-name>org.apache.tomcat.websocket.executorCoreSize</param-name>
+        <param-value>25</param-value>
+    </context-param>
+
 	<listener>
 		<listener-class>
 			org.springframework.web.context.ContextLoaderListener

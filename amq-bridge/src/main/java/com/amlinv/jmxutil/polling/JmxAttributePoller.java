@@ -281,7 +281,7 @@ public class JmxAttributePoller {
                 //
                 this.copyOutAttributes(obj, attributeValues, queryInfo.getAttributeSetters(), queryInfo.objectName);
             } catch (InstanceNotFoundException infExc) {
-                this.logInstanceNotFoundThrottle.info(log, "instance not found on polling object: oname={}",
+                this.logInstanceNotFoundThrottle.debug(log, "instance not found on polling object: oname={}",
                         queryInfo.getObjectName(), infExc);
             }
         }

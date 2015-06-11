@@ -6,6 +6,9 @@ package com.amlinv.activemq.monitor.web;
  * Created by art on 4/22/14.
  */
 
+import com.amlinv.javasched.Scheduler;
+import com.amlinv.javasched.Step;
+import com.amlinv.javasched.process.StepListSchedulerProcess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,17 +25,18 @@ public class MonitorWebsocket {
     private static final Logger         LOG = LoggerFactory.getLogger(MonitorWebsocket.class);
 
     public static final long DEFAULT_SEND_TIMEOUT = 30000;
-    public static final long MAX_MSG_BACKLOG = 1000;
+    public static final long MAX_MSG_BACKLOG = 100;
 
     private static MonitorWebsocketRegistry registry;
     private static long sendTimeout = DEFAULT_SEND_TIMEOUT;
+    private static Scheduler scheduler;
 
     private Session socketSession;
-    private final Object socketSessionSync = new Object();
+    private String socketSessionId;
 
-    private boolean sendActive;
-    private MySendHandler mySendHandler;
     private LinkedList<String> backlog = new LinkedList<>();
+
+    private StepListSchedulerProcess sendProcess = new StepListSchedulerProcess();
 
     public static MonitorWebsocketRegistry getRegistry() {
         return registry;
@@ -50,24 +54,37 @@ public class MonitorWebsocket {
         sendTimeout = newSendTimeout;
     }
 
+    public static void setScheduler(Scheduler scheduler) {
+        MonitorWebsocket.scheduler = scheduler;
+    }
+
+    public MonitorWebsocket() {
+        scheduler.startProcess(this.sendProcess);
+    }
+
     @OnClose
     public void onClose(Session sess, CloseReason reason) {
-        LOG.info("Closed websocket session: {}", reason.toString());
+        LOG.info("Closed websocket session: sessionId={}; reason='{}'", sess.getId(), reason.toString());
 
         registry.remove(sess.getId());
 
         this.backlog.clear();
+        this.sendProcess.shutdown();
     }
 
     @OnError
     public void onError (Session sess, Throwable thrown) {
-        LOG.info("Error on websocket session", thrown);
+        LOG.info("Error on websocket session: sessionId={}", sess.getId(), thrown);
+
+        this.safeClose();
     }
 
     @OnOpen
     public void onOpen(Session sess) {
-        LOG.debug("websocket connection open");
+        LOG.debug("websocket connection open: sessionId={}", sess.getId());
+
         this.socketSession = sess;
+        this.socketSessionId = sess.getId();
         this.socketSession.getAsyncRemote().setSendTimeout(sendTimeout);
 
         registry.put(sess.getId(), this);
@@ -78,52 +95,39 @@ public class MonitorWebsocket {
         LOG.debug("message from client {}", msg);
     }
 
-    public void  fireMonitorEvent(final String action, final String content) throws IOException {
+    public void fireMonitorEventNB(final String action, final String content) throws IOException {
+        if (this.socketSession == null) {
+            LOG.info("ignoring event; socket session is undefined: sessionId={}", this.socketSessionId);
+            return;
+        }
+
         String  msg = "{\"action\": \"" + action + "\", \"data\": " + content + "}";
 
-        queueSendToWebsocket(msg);
+        queueSendToWebsocketNB(msg);
     }
 
     /**
      * Send the given message to the
      * @param msg
      */
-    protected void queueSendToWebsocket(String msg) {
-        synchronized ( this.socketSessionSync ) {
-            if ( this.socketSession != null ) {
-                if ( this.sendActive ) {
-                    if ( this.backlog.size() >= MAX_MSG_BACKLOG ) {
-                        LOG.info("websocket backlog is full; aborting connection: sessionId={}",
-                                this.socketSession.getId());
+    protected void queueSendToWebsocketNB(String msg) {
+        if (this.sendProcess.getPendingStepCount() < MAX_MSG_BACKLOG) {
+            MySendStep sendStep = new MySendStep(msg);
+            this.sendProcess.addStep(sendStep);
+        } else {
+            LOG.info("websocket backlog is full; aborting connection: sessionId={}", this.socketSessionId);
 
-                        this.safeClose();
-                        throw new RuntimeException("websocket message backlog is full; aborting websocket connection");
-                    }
-
-                    this.backlog.add(msg);
-                } else {
-                    //
-                    // Create the send handler now if it hasn't yet been created.
-                    //
-                    if ( this.mySendHandler == null ) {
-                        this.mySendHandler = new MySendHandler(this.socketSession.getId());
-                    }
-
-                    writeToWebsocket(msg, this.mySendHandler);
-                }
-            }
+            this.safeClose();
         }
     }
 
     /**
-     * Write the given message to the websocket now using the send handler provided.
+     * Write the given message to the websocket now.
      *
      * @param msg text to send to the websocket.
-     * @param sendHandler send handler to use with this write.
      */
-    private void writeToWebsocket(String msg, SendHandler sendHandler) {
-        this.sendActive = true;
-        this.socketSession.getAsyncRemote().sendText(msg, sendHandler);
+    private void writeToWebsocket(String msg) throws IOException {
+        this.socketSession.getBasicRemote().sendText(msg);
     }
 
 
@@ -135,42 +139,46 @@ public class MonitorWebsocket {
         this.socketSession = null;
 
         try {
-            closeSession.close();
+            if (closeSession != null) {
+                //
+                // Remove from the registry first in case the close blocks for a while.  Doing so prevents additional
+                // errors logged for attempts to send to this now-defunct websocket.
+                //
+                registry.remove(this.socketSessionId);
+                closeSession.close();
+            }
         } catch (IOException ioExc) {
             LOG.debug("io exception on safe close of session", ioExc);
         }
     }
 
-    /**
-     * Send handler which receives notification of completed send to the websocket.
-     */
-    protected class MySendHandler implements SendHandler {
-        private final String sessionId;
+    protected void onIoException(IOException ioExc) {
+        this.LOG.info("IO exception on write to websocket; closing", ioExc);
+        this.sendProcess.shutdown();
+        this.safeClose();
+    }
 
-        public MySendHandler(String sessionId) {
-            this.sessionId = sessionId;
+    protected class MySendStep implements Step {
+        private MonitorWebsocket parent = MonitorWebsocket.this;
+
+        private final String msg;
+
+        public MySendStep(String msg) {
+            this.msg = msg;
         }
 
         @Override
-        public void onResult(SendResult result) {
-            //
-            // Log the result.
-            //
-            if ( result.isOK() ) {
-                LOG.trace("websocket session finished send: sessionId={}", this.sessionId);
-            } else {
-                LOG.info("exception on websocket send: sessionId={}", this.sessionId, result.getException());
-            }
-
-            //
-            // If there is a backlog, trigger the next iteration and simply reuse this send handler.
-            //
-            synchronized ( socketSessionSync ) {
-                sendActive = false;
-                if ( backlog.size() > 0 ) {
-                    writeToWebsocket(backlog.removeLast(), this);
-                }
+        public void execute() {
+            try {
+                parent.writeToWebsocket(msg);
+            } catch ( IOException ioExc ) {
+                parent.onIoException(ioExc);
             }
         }
-    };
+
+        @Override
+        public boolean isBlocking() {
+            return true;
+        }
+    }
 }

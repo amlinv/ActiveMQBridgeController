@@ -1,21 +1,15 @@
 package com.amlinv.activemq.monitor.web;
 
 import com.amlinv.activemq.monitor.activemq.ActiveMQBrokerPollerListener;
-import com.amlinv.activemq.monitor.model.ActiveMQBrokerStats;
 import com.amlinv.activemq.monitor.model.ActiveMQQueueJmxStats;
 import com.amlinv.activemq.monitor.model.BrokerStatsPackage;
 import com.amlinv.activemq.registry.DestinationRegistryListener;
 import com.amlinv.activemq.registry.model.DestinationState;
 import com.amlinv.activemq.stats.QueueStatisticsRegistry;
-import com.amlinv.util.thread.DaemonThreadFactory;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 /**
  * Created by art on 5/14/15.
@@ -28,10 +22,6 @@ public class MonitorWebsocketBrokerStatsFeed implements ActiveMQBrokerPollerList
     private MonitorWebsocketRegistry websocketRegistry;
 
     private Gson gson = new GsonBuilder().create();
-
-    private ScheduledThreadPoolExecutor executor =
-            new ScheduledThreadPoolExecutor(
-                    10, new DaemonThreadFactory("Monitor-Websocket-Dispatcher-Thread-"));
 
     private DestinationRegistryListener myQueueRegistryListener = new MyQueueRegistryListener();
 
@@ -51,14 +41,6 @@ public class MonitorWebsocketBrokerStatsFeed implements ActiveMQBrokerPollerList
         this.websocketRegistry = websocketRegistry;
     }
 
-    public ScheduledThreadPoolExecutor getExecutor() {
-        return executor;
-    }
-
-    public void setExecutor(ScheduledThreadPoolExecutor executor) {
-        this.executor = executor;
-    }
-
     public DestinationRegistryListener getQueueRegistryListener() {
         return myQueueRegistryListener;
     }
@@ -72,6 +54,7 @@ public class MonitorWebsocketBrokerStatsFeed implements ActiveMQBrokerPollerList
     }
 
     public void init () {
+
     }
 
     @Override
@@ -80,13 +63,6 @@ public class MonitorWebsocketBrokerStatsFeed implements ActiveMQBrokerPollerList
     }
 
     protected void onBrokerStatsUpdate (BrokerStatsPackage brokerStatsPackage) {
-        ActiveMQBrokerStats brokerStats = brokerStatsPackage.getBrokerStats();
-
-        String brokerName = brokerStats.getBrokerName();
-        Map<String, ActiveMQQueueJmxStats> oldQueueStats;
-        Map<String, ActiveMQQueueJmxStats> newQueueStats = new ConcurrentHashMap<>(brokerStatsPackage.getQueueStats());
-
-
         //
         // Update the metrics for the queues for which statistics were collected.
         //
@@ -95,24 +71,20 @@ public class MonitorWebsocketBrokerStatsFeed implements ActiveMQBrokerPollerList
         }
 
         String brokerStatsJson = gson.toJson(brokerStatsPackage);
-        fireMonitorEvent("brokerStats", brokerStatsJson);
+        fireMonitorEventNB("brokerStats", brokerStatsJson);
 
         // TBD: not every time (use a timer and/or check for all polled brokers reporting in)
         String queueStatsJson = gson.toJson(queueStatisticsRegistry.getQueueStats());
-        fireMonitorEvent("queueStats", queueStatsJson);
+        fireMonitorEventNB("queueStats", queueStatsJson);
     }
 
-    protected void fireMonitorEvent (final String action, final String content) {
+    protected void fireMonitorEventNB(final String action, final String content) {
         for ( final MonitorWebsocket oneTarget : this.websocketRegistry.values() ) {
-            executor.execute(new Runnable() {
-                public void run() {
-                    try {
-                        oneTarget.fireMonitorEvent(action, content);
-                    } catch (Throwable exc) {
-                        log.info("error attempting to send event to listener", exc);
-                    }
-                }
-            });
+            try {
+                oneTarget.fireMonitorEventNB(action, content);
+            } catch (Throwable exc) {
+                log.info("error attempting to send event to listener", exc);
+            }
         }
     }
 
@@ -124,7 +96,7 @@ public class MonitorWebsocketBrokerStatsFeed implements ActiveMQBrokerPollerList
         public void onPutEntry(String putKey, DestinationState putValue) {
             String queueNameJson = gson.toJson(putValue.getName());
 
-            fireMonitorEvent("queueAdded", queueNameJson);
+            fireMonitorEventNB("queueAdded", queueNameJson);
         }
 
         @Override
@@ -134,7 +106,7 @@ public class MonitorWebsocketBrokerStatsFeed implements ActiveMQBrokerPollerList
             //
             String queueNameJson = gson.toJson(removeValue.getName());
 
-            fireMonitorEvent("queueRemoved", queueNameJson);
+            fireMonitorEventNB("queueRemoved", queueNameJson);
         }
 
         @Override

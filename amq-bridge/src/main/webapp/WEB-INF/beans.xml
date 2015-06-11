@@ -143,8 +143,12 @@ http://cxf.apache.org/schemas/jaxrs.xsd">
         <!--<property name="metricRegistry" ref="metricRegistry" />-->
     </bean>
 
+    <!-- PROCESS SCHEDULING -->
+    <bean id="scheduler" class="com.amlinv.javasched.impl.RoundRobinScheduler" init-method="start" />
+
     <!-- CLASS STATIC FIELD INJECTORS -->
     <bean class="com.amlinv.activemq.monitor.web.MonitorWebsocketStaticInjector">
         <property name="registry" ref="monitorWebsocketRegistry" />
+        <property name="scheduler" ref="scheduler" />
     </bean>
 </beans>
