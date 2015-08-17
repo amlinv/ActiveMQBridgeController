@@ -1,15 +1,19 @@
 package com.amlinv.jmxutil.polling;
 
+import com.amlinv.jmxutil.MBeanLocationParameterSource;
 import com.amlinv.jmxutil.annotation.MBeanAnnotationUtil;
 import com.amlinv.jmxutil.connection.MBeanAccessConnection;
 import com.amlinv.jmxutil.connection.MBeanAccessConnectionFactory;
 import com.amlinv.jmxutil.connection.impl.MBeanBatchCapableAccessConnection;
-import com.amlinv.activemq.monitor.model.MBeanLocationParameterSource;
-import com.amlinv.logging.RepeatLogMessageSuppressor;
+import com.amlinv.logging.util.RepeatLogMessageSuppressor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.management.*;
+import javax.management.Attribute;
+import javax.management.InstanceNotFoundException;
+import javax.management.MalformedObjectNameException;
+import javax.management.ObjectName;
+import javax.management.ReflectionException;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;

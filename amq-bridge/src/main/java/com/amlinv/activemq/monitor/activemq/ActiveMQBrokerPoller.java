@@ -4,11 +4,11 @@ import com.amlinv.activemq.registry.DestinationRegistry;
 import com.amlinv.activemq.registry.DestinationRegistryListener;
 import com.amlinv.activemq.registry.model.DestinationState;
 import com.amlinv.jmxutil.connection.MBeanAccessConnectionFactory;
-import com.amlinv.jmxutil.polling.JmxAttributePoller;
 import com.amlinv.activemq.monitor.model.ActiveMQBrokerStats;
 import com.amlinv.activemq.monitor.model.ActiveMQQueueJmxStats;
 import com.amlinv.activemq.monitor.model.BrokerStatsPackage;
-import com.amlinv.logging.RepeatLogMessageSuppressor;
+import com.amlinv.jmxutil.polling.JmxAttributePoller;
+import com.amlinv.logging.util.RepeatLogMessageSuppressor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

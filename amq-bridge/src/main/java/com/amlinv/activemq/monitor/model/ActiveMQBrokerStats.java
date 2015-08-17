@@ -1,5 +1,6 @@
 package com.amlinv.activemq.monitor.model;
 
+import com.amlinv.jmxutil.MBeanLocationParameterSource;
 import com.amlinv.jmxutil.annotation.MBeanAttribute;
 import com.amlinv.jmxutil.annotation.MBeanLocation;
 

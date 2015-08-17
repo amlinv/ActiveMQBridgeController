@@ -1,4 +1,4 @@
-package com.amlinv.logging;
+package com.amlinv.logging.util;
 
 import org.slf4j.Logger;
 

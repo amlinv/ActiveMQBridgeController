@@ -91,6 +91,11 @@
             <!-- INNER-PROJECT DEPENDENCIES -->
             <dependency>
                 <groupId>com.amlinv</groupId>
+                <artifactId>log-utils</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.amlinv</groupId>
                 <artifactId>service-ctl-web-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -107,6 +112,11 @@
             <dependency>
                 <groupId>com.amlinv</groupId>
                 <artifactId>service-util</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.amlinv</groupId>
+                <artifactId>stat-collection-utils</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -297,11 +307,13 @@
     </dependencies>
 
     <modules>
+        <module>log-utils</module>
+        <module>stats-util</module>
+        <module>stat-collection-utils</module>
+        <module>service-util</module>
         <module>amq-bridge</module>
         <module>service-ctl</module>
         <module>service-ctl-web</module>
         <module>service-ctl-web-api</module>
-        <module>service-util</module>
-        <module>stats-util</module>
     </modules>
 </project>

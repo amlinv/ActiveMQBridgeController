@@ -1,6 +1,5 @@
 package com.amlinv.jmxutil.connection.impl;
 
-import com.amlinv.jmxutil.connection.MBeanAccessConnection;
 import org.jolokia.client.J4pClient;
 import org.jolokia.client.exception.J4pBulkRemoteException;
 import org.jolokia.client.exception.J4pException;

@@ -22,8 +22,8 @@ public interface MBeanBatchCapableAccessConnection extends MBeanAccessConnection
      *                       each object name.
      * @return map of attribute values for each object name; note an object name will be missing from the map if it
      * resulted in an error.
-     * @throws java.io.IOException
-     * @throws javax.management.ReflectionException
+     * @throws IOException
+     * @throws ReflectionException
      */
     Map<ObjectName, List<Attribute>> batchQueryAttributes(Map<ObjectName, List<String>> objectAttNames)
             throws IOException, ReflectionException, MalformedObjectNameException;

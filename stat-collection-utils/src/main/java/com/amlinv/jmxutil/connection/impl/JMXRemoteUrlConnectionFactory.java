@@ -1,6 +1,5 @@
 package com.amlinv.jmxutil.connection.impl;
 
-import com.amlinv.jmxutil.connection.JMXConnectionSource;
 import com.amlinv.jmxutil.connection.MBeanAccessConnection;
 import com.amlinv.jmxutil.connection.MBeanAccessConnectionFactory;
 import org.slf4j.Logger;

@@ -1,4 +1,4 @@
-package com.amlinv.activemq.monitor.model;
+package com.amlinv.jmxutil;
 
 /**
  * Created by art on 3/31/15.

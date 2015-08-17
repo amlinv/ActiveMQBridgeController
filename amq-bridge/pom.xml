@@ -21,7 +21,15 @@
         </dependency>
         <dependency>
             <groupId>com.amlinv</groupId>
+            <artifactId>stat-collection-utils</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.amlinv</groupId>
             <artifactId>stats-util</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.amlinv</groupId>
+            <artifactId>log-utils</artifactId>
         </dependency>
 
         <dependency>
