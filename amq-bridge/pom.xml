@@ -25,7 +25,7 @@
         </dependency>
         <dependency>
             <groupId>com.amlinv</groupId>
-            <artifactId>stats-util</artifactId>
+            <artifactId>stats-utils</artifactId>
         </dependency>
         <dependency>
             <groupId>com.amlinv</groupId>
