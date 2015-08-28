@@ -110,10 +110,16 @@
                 <version>${project.version}</version>
             </dependency>
 
+            <!-- Other AMLINV Dependencies -->
             <dependency>
                 <groupId>com.amlinv</groupId>
                 <artifactId>stat-collection-utils</artifactId>
                 <version>1.0.1</version>
+            </dependency>
+            <dependency>
+                <groupId>com.amlinv</groupId>
+                <artifactId>registry-utils</artifactId>
+                <version>1.0.0</version>
             </dependency>
             <dependency>
                 <groupId>com.amlinv</groupId>
@@ -308,7 +314,6 @@
     </dependencies>
 
     <modules>
-        <module>service-util</module>
         <module>amq-bridge</module>
         <module>service-ctl</module>
         <module>service-ctl-web</module>

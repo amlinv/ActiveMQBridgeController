@@ -1,7 +1,7 @@
 package com.amlinv.activemq.registry;
 
 import com.amlinv.activemq.registry.model.DestinationState;
-import com.amlinv.server.util.ConcurrentRegistry;
+import com.amlinv.registry.util.ConcurrentRegistry;
 
 /**
  * Registry of destinations.  Note that no destination type is included in the registry, so each registry must be

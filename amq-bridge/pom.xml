@@ -25,6 +25,10 @@
         </dependency>
         <dependency>
             <groupId>com.amlinv</groupId>
+            <artifactId>registry-utils</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.amlinv</groupId>
             <artifactId>stats-utils</artifactId>
         </dependency>
         <dependency>

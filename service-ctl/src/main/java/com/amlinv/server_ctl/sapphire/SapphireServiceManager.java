@@ -1,6 +1,6 @@
 package com.amlinv.server_ctl.sapphire;
 
-import com.amlinv.server.util.ConcurrentRegistry;
+import com.amlinv.registry.util.ConcurrentRegistry;
 import com.amlinv.server_ctl.LocalServiceExecSpec;
 import com.amlinv.server_ctl.LocalServiceExecution;
 import com.amlinv.server_ctl.RemoteServiceExecSpec;

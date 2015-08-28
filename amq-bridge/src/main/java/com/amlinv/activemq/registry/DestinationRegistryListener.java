@@ -1,8 +1,7 @@
 package com.amlinv.activemq.registry;
 
-import com.amlinv.activemq.registry.model.DestinationInfo;
 import com.amlinv.activemq.registry.model.DestinationState;
-import com.amlinv.server.util.RegistryListener;
+import com.amlinv.registry.util.RegistryListener;
 
 /**
  * Listener to registry events on a DestinationRegistry.

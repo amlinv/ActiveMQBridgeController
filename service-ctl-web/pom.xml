@@ -21,10 +21,6 @@
             <groupId>com.amlinv</groupId>
             <artifactId>service-ctl</artifactId>
         </dependency>
-        <dependency>
-            <groupId>com.amlinv</groupId>
-            <artifactId>service-util</artifactId>
-        </dependency>
 
         <dependency>
             <groupId>org.apache.cxf</groupId>

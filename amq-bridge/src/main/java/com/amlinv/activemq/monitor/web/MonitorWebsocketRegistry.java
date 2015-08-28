@@ -1,6 +1,6 @@
 package com.amlinv.activemq.monitor.web;
 
-import com.amlinv.server.util.ConcurrentRegistry;
+import com.amlinv.registry.util.ConcurrentRegistry;
 
 /**
  * Created by art on 5/14/15.
