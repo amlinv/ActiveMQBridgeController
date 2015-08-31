@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <Configuration monitorInterval="5">
     <Properties>
-        <!-- TBD999: not /tmp! -->
-        <Property name="data.dir">/tmp</Property>
+        <Property name="data.dir">data</Property>
     </Properties>
     <Appenders>
 

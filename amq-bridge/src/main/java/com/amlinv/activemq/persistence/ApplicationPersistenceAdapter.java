@@ -1,10 +1,9 @@
 package com.amlinv.activemq.persistence;
 
-import com.amlinv.activemq.registry.BrokerRegistry;
-import com.amlinv.activemq.registry.DestinationRegistry;
+import com.amlinv.activemq.topo.registry.BrokerRegistry;
+import com.amlinv.activemq.topo.registry.DestinationRegistry;
 
 import java.io.IOException;
-import java.util.Set;
 
 /**
  * Created by art on 5/16/15.

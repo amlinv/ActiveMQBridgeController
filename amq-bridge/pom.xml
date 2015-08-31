@@ -24,6 +24,10 @@
             <artifactId>stat-collection-utils</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.amlinv.activemq</groupId>
+            <artifactId>amq-topo-utils</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.amlinv</groupId>
             <artifactId>registry-utils</artifactId>
         </dependency>
@@ -34,6 +38,10 @@
         <dependency>
             <groupId>com.amlinv</groupId>
             <artifactId>log-utils</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.amlinv</groupId>
+            <artifactId>thread-utils</artifactId>
         </dependency>
 
         <dependency>

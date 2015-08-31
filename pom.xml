@@ -117,18 +117,28 @@
                 <version>1.0.1</version>
             </dependency>
             <dependency>
+                <groupId>com.amlinv.activemq</groupId>
+                <artifactId>amq-topo-utils</artifactId>
+                <version>1.1.0</version>
+            </dependency>
+            <dependency>
                 <groupId>com.amlinv</groupId>
                 <artifactId>registry-utils</artifactId>
                 <version>1.0.0</version>
             </dependency>
             <dependency>
                 <groupId>com.amlinv</groupId>
-                <artifactId>log-utils</artifactId>
+                <artifactId>stats-utils</artifactId>
                 <version>1.0.0</version>
             </dependency>
             <dependency>
                 <groupId>com.amlinv</groupId>
-                <artifactId>stats-utils</artifactId>
+                <artifactId>thread-utils</artifactId>
+                <version>1.0.0</version>
+            </dependency>
+            <dependency>
+                <groupId>com.amlinv</groupId>
+                <artifactId>log-utils</artifactId>
                 <version>1.0.0</version>
             </dependency>
 

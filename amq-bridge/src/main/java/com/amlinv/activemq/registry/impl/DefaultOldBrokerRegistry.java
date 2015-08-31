@@ -1,7 +1,7 @@
 package com.amlinv.activemq.registry.impl;
 
 import com.amlinv.activemq.registry.OldBrokerRegistry;
-import com.amlinv.activemq.registry.model.BrokerInfo;
+import com.amlinv.activemq.topo.registry.model.BrokerInfo;
 
 import java.util.HashSet;
 import java.util.List;

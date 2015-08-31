@@ -1,6 +1,6 @@
 package com.amlinv.util.event;
 
-import com.amlinv.util.thread.DaemonThreadFactory;
+import com.amlinv.thread.util.DaemonThreadFactory;
 
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;

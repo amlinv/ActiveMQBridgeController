@@ -6,7 +6,7 @@ package com.amlinv.activemq.bridge.web;
  * Created by art on 4/22/14.
  */
 
-import com.amlinv.util.thread.DaemonThreadFactory;
+import com.amlinv.thread.util.DaemonThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,7 +16,6 @@ import javax.ws.rs.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 

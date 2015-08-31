@@ -1,8 +1,8 @@
 package com.amlinv.activemq.stats;
 
 import com.amlinv.activemq.monitor.model.ActiveMQQueueJmxStats;
-import com.amlinv.activemq.registry.DestinationRegistryListener;
-import com.amlinv.activemq.registry.model.DestinationState;
+import com.amlinv.activemq.topo.registry.DestinationRegistryListener;
+import com.amlinv.activemq.topo.registry.model.DestinationState;
 
 import java.util.HashMap;
 import java.util.Map;

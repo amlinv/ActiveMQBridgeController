@@ -17,8 +17,8 @@ import com.amlinv.activemq.nw_ctlr.NetworkEventSource;
 import com.amlinv.activemq.nw_ctlr.event.AddConsumerEvent;
 import com.amlinv.activemq.nw_ctlr.event.RemoveConsumerEvent;
 import com.amlinv.activemq.registry.OldBrokerRegistry;
-import com.amlinv.activemq.registry.DestinationRegistry;
-import com.amlinv.activemq.registry.model.BrokerInfo;
+import com.amlinv.activemq.topo.registry.DestinationRegistry;
+import com.amlinv.activemq.topo.registry.model.BrokerInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

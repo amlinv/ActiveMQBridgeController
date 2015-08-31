@@ -1,11 +1,11 @@
 package com.amlinv.activemq.persistence.impl;
 
 import com.amlinv.activemq.persistence.ApplicationPersistenceAdapter;
-import com.amlinv.activemq.registry.BrokerRegistry;
-import com.amlinv.activemq.registry.DestinationRegistry;
-import com.amlinv.activemq.registry.model.BrokerInfo;
-import com.amlinv.activemq.registry.model.DestinationInfo;
-import com.amlinv.activemq.registry.model.DestinationState;
+import com.amlinv.activemq.topo.registry.BrokerRegistry;
+import com.amlinv.activemq.topo.registry.DestinationRegistry;
+import com.amlinv.activemq.topo.registry.model.BrokerInfo;
+import com.amlinv.activemq.topo.registry.model.DestinationInfo;
+import com.amlinv.activemq.topo.registry.model.DestinationState;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.slf4j.Logger;

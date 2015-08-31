@@ -1,17 +1,16 @@
 package com.amlinv.activemq.monitor.web;
 
-import com.amlinv.activemq.discovery.MBeanDestinationDiscoverer;
-import com.amlinv.activemq.discovery.MBeanDestinationDiscovererScheduler;
+import com.amlinv.activemq.topo.discovery.MBeanDestinationDiscoverer;
+import com.amlinv.activemq.topo.discovery.MBeanDestinationDiscovererScheduler;
 import com.amlinv.activemq.monitor.activemq.ActiveMQBrokerPoller;
-import com.amlinv.activemq.registry.model.DestinationState;
+import com.amlinv.activemq.topo.registry.BrokerRegistry;
+import com.amlinv.activemq.topo.registry.BrokerRegistryListener;
+import com.amlinv.activemq.topo.registry.DestinationRegistry;
+import com.amlinv.activemq.topo.registry.model.BrokerInfo;
+import com.amlinv.activemq.topo.registry.model.DestinationState;
 import com.amlinv.jmxutil.connection.MBeanAccessConnectionFactory;
-import com.amlinv.jmxutil.polling.JmxActiveMQUtil;
-import com.amlinv.activemq.registry.BrokerRegistry;
-import com.amlinv.activemq.registry.BrokerRegistryListener;
-import com.amlinv.activemq.registry.DestinationRegistry;
-import com.amlinv.activemq.registry.model.BrokerInfo;
-import com.amlinv.activemq.registry.model.DestinationInfo;
-import com.amlinv.util.thread.DaemonThreadFactory;
+import com.amlinv.activemq.topo.jmxutil.polling.JmxActiveMQUtil;
+import com.amlinv.thread.util.DaemonThreadFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

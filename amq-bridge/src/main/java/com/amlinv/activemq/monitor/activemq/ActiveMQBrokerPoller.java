@@ -1,8 +1,8 @@
 package com.amlinv.activemq.monitor.activemq;
 
-import com.amlinv.activemq.registry.DestinationRegistry;
-import com.amlinv.activemq.registry.DestinationRegistryListener;
-import com.amlinv.activemq.registry.model.DestinationState;
+import com.amlinv.activemq.topo.registry.DestinationRegistry;
+import com.amlinv.activemq.topo.registry.DestinationRegistryListener;
+import com.amlinv.activemq.topo.registry.model.DestinationState;
 import com.amlinv.jmxutil.connection.MBeanAccessConnectionFactory;
 import com.amlinv.activemq.monitor.model.ActiveMQBrokerStats;
 import com.amlinv.activemq.monitor.model.ActiveMQQueueJmxStats;

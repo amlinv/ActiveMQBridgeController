@@ -1,6 +1,6 @@
 package com.amlinv.activemq.registry;
 
-import com.amlinv.activemq.registry.model.BrokerInfo;
+import com.amlinv.activemq.topo.registry.model.BrokerInfo;
 
 import java.util.Set;
 
